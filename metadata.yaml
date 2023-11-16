@@ -1,0 +1,9 @@
+type: fluentforward
+
+status:
+  class: exporter
+  stability:
+    development: [logs]
+  distributions: [contrib]
+  codeowners:
+    active: [r0mdau]
