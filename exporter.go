@@ -107,6 +107,7 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 			Address: f.config.Endpoint,
 			Timeout: f.config.ConnectionTimeout,
 		},
+		RequireAck: f.config.RequireAck,
 	})
 
 	if err := client.Connect(); err != nil {

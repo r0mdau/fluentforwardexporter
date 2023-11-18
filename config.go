@@ -24,6 +24,9 @@ type TCPClientSettings struct {
 type Config struct {
 	TCPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 
+	// RequireAck enables the acknowledgement feature.
+	RequireAck bool `mapstructure:"require_ack"`
+
 	// The Fluent tag parameter used for routing
 	Tag string `mapstructure:"tag"`
 

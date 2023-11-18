@@ -2,8 +2,9 @@ fluentforward:
   endpoint: "a.new.fluentforward.target:24224"
 fluentforward/allsettings:
   endpoint: "a.new.fluentforward.target:24224"
-  tag: nginx
   connection_timeout: 30s
+  require_ack: true
+  tag: nginx
   compress_gzip: true
   default_labels_enabled:
     time: true

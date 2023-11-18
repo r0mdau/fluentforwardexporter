@@ -32,6 +32,7 @@ func createDefaultConfig() component.Config {
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
 		},
+		RequireAck:   false,
 		Tag:          "tag",
 		CompressGzip: false,
 		DefaultLabelsEnabled: map[string]bool{

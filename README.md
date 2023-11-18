@@ -22,7 +22,7 @@ TODO:
 
 - TLS support
 - Shared key support
-- Handling overload
+- Handling overloaded endpoint
 - Unit tests
 
 ## Getting Started
@@ -33,6 +33,7 @@ TODO:
 |---|---|---|---|---|
 | endpoint | yes |  | string | Target URL to send `Forward` log streams to |
 | connection_timeout | no | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
+| require_ack| no | false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
 | tag | no | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | no | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
 
