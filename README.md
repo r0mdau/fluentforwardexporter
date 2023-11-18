@@ -19,6 +19,8 @@ Do not use in production.
 
 TODO:
 
-- Work on config
-- Work on handling failures
+- TLS support
+- Shared key support
+- Handling network failures
+- Handling overload
 - Unit tests

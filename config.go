@@ -6,18 +6,18 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 import (
 	"fmt"
 	"net/url"
+	"time"
 
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
 type TCPClientSettings struct {
-	// The target URL to send data to (e.g.: http://some.url:9411/v1/traces).
+	// The target endpoint URI to send data to (e.g.: some.url:24224).
 	Endpoint string `mapstructure:"endpoint"`
 
-	// TLSSetting struct exposes TLS client configuration.
-	TLSSetting configtls.TLSClientSetting `mapstructure:"tls"`
+	// Timeout parameter configures `http.Client.Timeout`.
+	Timeout time.Duration `mapstructure:"timeout"`
 }
 
 // Config defines configuration for fluentforward exporter.

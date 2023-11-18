@@ -5,6 +5,7 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 
 import (
 	"context"
+	"time"
 
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/exporter"
@@ -29,6 +30,7 @@ func createDefaultConfig() component.Config {
 	return &Config{
 		TCPClientSettings: TCPClientSettings{
 			Endpoint: "localhost:24224",
+			Timeout:  time.Second * 60,
 		},
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
@@ -44,7 +46,7 @@ func createLogsExporter(ctx context.Context, set exporter.CreateSettings, config
 		set,
 		config,
 		exp.pushLogData,
-		// explicitly disable since we rely on http.Client timeout logic.
+		// explicitly disable since we rely on net.TCP timeout logic.
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithRetry(exporterConfig.RetrySettings),
 		exporterhelper.WithQueue(exporterConfig.QueueSettings),

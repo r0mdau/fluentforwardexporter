@@ -77,8 +77,10 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 	client := fclient.New(fclient.ConnectionOptions{
 		Factory: &fclient.ConnFactory{
 			Address: f.config.Endpoint,
+			Timeout: f.config.Timeout,
 		},
 	})
+
 	if err := client.Connect(); err != nil {
 		return err
 	}
