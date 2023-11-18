@@ -34,6 +34,12 @@ func createDefaultConfig() component.Config {
 		},
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
+		DefaultLabelsEnabled: map[string]bool{
+			"time":     true,
+			"exporter": true,
+			"job":      true,
+			"instance": true,
+		},
 	}
 }
 

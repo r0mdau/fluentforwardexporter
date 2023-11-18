@@ -3,6 +3,11 @@ fluentforward:
 fluentforward/allsettings:
   endpoint: "a.new.fluentforward.target:24224"
   timeout: 10s
+  default_labels_enabled:
+    time: true
+    exporter: false
+    job: false
+    instance: false
   sending_queue:
     enabled: true
     num_consumers: 2

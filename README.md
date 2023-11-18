@@ -24,3 +24,34 @@ TODO:
 - Handling network failures
 - Handling overload
 - Unit tests
+
+## Getting Started
+
+The following settings are required:
+
+- `endpoint` (no default): The target URI to send Forward log streams to (e.g.: `a.new.fluentforward.target:24224`).
+- `default_labels_enabled` (optional): The map that allows to disable default labels: `time`, `exporter`, `job`, `instance`.
+If `default_labels_enabled` is omitted then default labels will be added. If one of the labels is omitted in `default_labels_enabled` then this label will be added.
+
+Example that will add only the `time` attribute in the log record:
+```yaml
+exporters:
+  fluentforward:
+    endpoint: a.new.fluentforward.target:24224
+    connection_timeout: 10s
+    default_labels_enabled:
+      time: true
+      exporter: false
+      job: false
+      instance: false
+```
+
+## Severity
+
+OpenTelemetry uses `record.severity` to track log levels.
+
+## Advanced Configuration
+
+Those helper files are leveraged to provide additional capabilities automatically:
+
+- [Queuing and retry settings](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/exporterhelper/README.md)

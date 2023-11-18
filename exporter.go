@@ -29,12 +29,20 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 	}
 }
 
-func convertLogToMap(lr plog.LogRecord) map[string]interface{} {
+func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
 	// create more fields
 	// move function into a translator
 	m := make(map[string]interface{})
 	m["severity"] = lr.SeverityText()
 	m["message"] = lr.Body().AsString()
+	for key, val := range f.config.DefaultLabelsEnabled {
+		if val {
+			attribute, found := lr.Attributes().Get(key)
+			if found {
+				m[key] = attribute.AsString()
+			}
+		}
+	}
 	return m
 }
 
@@ -51,7 +59,7 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 				log := logs.At(k)
 				entry := fproto.EntryExt{
 					Timestamp: fproto.EventTimeNow(),
-					Record:    convertLogToMap(log),
+					Record:    f.convertLogToMap(log),
 				}
 				entries = append(entries, entry)
 			}
