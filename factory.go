@@ -29,9 +29,9 @@ func NewFactory() exporter.Factory {
 func createDefaultConfig() component.Config {
 	return &Config{
 		TCPClientSettings: TCPClientSettings{
-			Endpoint: "localhost:24224",
-			Timeout:  time.Second * 60,
-			Tag:      "tag",
+			Endpoint:          "localhost:24224",
+			ConnectionTimeout: time.Second * 30,
+			Tag:               "tag",
 		},
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
@@ -53,7 +53,7 @@ func createLogsExporter(ctx context.Context, set exporter.CreateSettings, config
 		set,
 		config,
 		exp.pushLogData,
-		// explicitly disable since we rely on net.TCP timeout logic.
+		// explicitly disable since we rely on net.Dialer timeout logic.
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
 		exporterhelper.WithRetry(exporterConfig.RetrySettings),
 		exporterhelper.WithQueue(exporterConfig.QueueSettings),

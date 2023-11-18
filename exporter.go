@@ -85,7 +85,7 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 	client := fclient.New(fclient.ConnectionOptions{
 		Factory: &fclient.ConnFactory{
 			Address: f.config.Endpoint,
-			Timeout: f.config.Timeout,
+			Timeout: f.config.ConnectionTimeout,
 		},
 	})
 

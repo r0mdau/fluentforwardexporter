@@ -16,8 +16,8 @@ type TCPClientSettings struct {
 	// The target endpoint URI to send data to (e.g.: some.url:24224).
 	Endpoint string `mapstructure:"endpoint"`
 
-	// Timeout parameter configures `http.Client.Timeout`.
-	Timeout time.Duration `mapstructure:"timeout"`
+	// Connection Timeout parameter configures `net.Dialer`.
+	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
 
 	// Tha Fluent tag parameter
 	Tag string `mapstructure:"tag"`
