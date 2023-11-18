@@ -13,7 +13,8 @@
 
 Forward is the protocol used by Fluentd to route message between peers.
 
-Specification: [Forward protocol specification v1](https://github.com/fluent/fluentd/wiki/Forward-Protocol-Specification-v1).
+- Protocol specification: [Forward protocol specification v1](https://github.com/fluent/fluentd/wiki/Forward-Protocol-Specification-v1)
+- Library used [IBM/fluent-forward-go](https://github.com/IBM/fluent-forward-go) (MIT License)
 
 Do not use in production.
 
