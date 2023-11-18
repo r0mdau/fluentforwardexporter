@@ -31,6 +31,7 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint: "localhost:24224",
 			Timeout:  time.Second * 60,
+			Tag:      "tag",
 		},
 		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),

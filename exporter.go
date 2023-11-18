@@ -67,12 +67,12 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 	}
 
 	// do we allow to set tags somewhere?
-	err := f.client.SendForward("tag", entries)
+	err := f.client.SendForward(f.config.Tag, entries)
 	if err != nil {
 		if errr := f.client.Reconnect(); errr != nil {
 			return errr
 		}
-		err := f.client.SendForward("tag", entries)
+		err := f.client.SendForward(f.config.Tag, entries)
 		if err != nil {
 			return err
 		}

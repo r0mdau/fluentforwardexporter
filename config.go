@@ -18,6 +18,9 @@ type TCPClientSettings struct {
 
 	// Timeout parameter configures `http.Client.Timeout`.
 	Timeout time.Duration `mapstructure:"timeout"`
+
+	// Tha Fluent tag parameter
+	Tag string `mapstructure:"tag"`
 }
 
 // Config defines configuration for fluentforward exporter.
