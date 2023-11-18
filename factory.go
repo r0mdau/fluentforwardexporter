@@ -31,16 +31,17 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
-			Tag:               "tag",
 		},
-		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
-		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
+		Tag:          "tag",
+		CompressGzip: false,
 		DefaultLabelsEnabled: map[string]bool{
 			"time":     true,
 			"exporter": true,
 			"job":      true,
 			"instance": true,
 		},
+		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
+		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
 	}
 }
 

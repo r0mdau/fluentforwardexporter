@@ -30,7 +30,6 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 }
 
 func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
-	// create more fields
 	// move function into a translator
 	m := make(map[string]interface{})
 	m["severity"] = lr.SeverityText()
@@ -66,7 +65,28 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 		}
 	}
 
-	// do we allow to set tags somewhere?
+	if f.config.CompressGzip {
+		return f.SendCompressed(entries)
+	}
+	return f.SendForward(entries)
+}
+
+func (f *fluentforwardExporter) SendCompressed(entries []fproto.EntryExt) error {
+	err := f.client.SendCompressed(f.config.Tag, entries)
+	if err != nil {
+		if errr := f.client.Reconnect(); errr != nil {
+			return errr
+		}
+		err := f.client.SendCompressed(f.config.Tag, entries)
+		if err != nil {
+			return err
+		}
+		return err
+	}
+	return nil
+}
+
+func (f *fluentforwardExporter) SendForward(entries []fproto.EntryExt) error {
 	err := f.client.SendForward(f.config.Tag, entries)
 	if err != nil {
 		if errr := f.client.Reconnect(); errr != nil {

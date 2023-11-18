@@ -18,18 +18,23 @@ type TCPClientSettings struct {
 
 	// Connection Timeout parameter configures `net.Dialer`.
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
-
-	// Tha Fluent tag parameter
-	Tag string `mapstructure:"tag"`
 }
 
 // Config defines configuration for fluentforward exporter.
 type Config struct {
-	TCPClientSettings            `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
+	TCPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
+
+	// The Fluent tag parameter used for routing
+	Tag string `mapstructure:"tag"`
+
+	// CompressGzip enables gzip compression for the payload.
+	CompressGzip bool `mapstructure:"compress_gzip"`
+
+	// DefaultLabelsEnabled is a map of default attributes to be added to each log record.
+	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
+
 	exporterhelper.QueueSettings `mapstructure:"sending_queue"`
 	exporterhelper.RetrySettings `mapstructure:"retry_on_failure"`
-
-	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
 }
 
 var _ component.Config = (*Config)(nil)

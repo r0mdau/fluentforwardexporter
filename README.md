@@ -21,17 +21,23 @@ TODO:
 
 - TLS support
 - Shared key support
-- Handling network failures
 - Handling overload
 - Unit tests
 
 ## Getting Started
 
-The following settings are required:
+### Settings
 
-- `endpoint` (no default): The target URI to send Forward log streams to (e.g.: `a.new.fluentforward.target:24224`).
-- `default_labels_enabled` (optional): The map that allows to disable default labels: `time`, `exporter`, `job`, `instance`.
+| Property | Mandatory | Default value | Type | Description |
+|---|---|---|---|---|
+| endpoint | yes |  | string | Target URL to send `Forward` log streams to |
+| connection_timeout | no | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
+| tag | no | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
+| compress_gzip | no | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
+
 If `default_labels_enabled` is omitted then default labels will be added. If one of the labels is omitted in `default_labels_enabled` then this label will be added.
+
+See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
 Example that will add only the `time` attribute in the log record:
 ```yaml
@@ -40,6 +46,7 @@ exporters:
     endpoint: a.new.fluentforward.target:24224
     connection_timeout: 10s
     tag: nginx
+    compress_gzip: true
     default_labels_enabled:
       time: true
       exporter: false
