@@ -39,6 +39,7 @@ exporters:
   fluentforward:
     endpoint: a.new.fluentforward.target:24224
     connection_timeout: 10s
+    tag: nginx
     default_labels_enabled:
       time: true
       exporter: false
