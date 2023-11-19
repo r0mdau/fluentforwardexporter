@@ -9,6 +9,7 @@ import (
 	"sync"
 
 	fclient "github.com/IBM/fluent-forward-go/fluent/client"
+	"github.com/IBM/fluent-forward-go/fluent/protocol"
 	fproto "github.com/IBM/fluent-forward-go/fluent/protocol"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/plog"
@@ -22,7 +23,7 @@ type fluentforwardExporter struct {
 }
 
 func newExporter(config *Config, settings component.TelemetrySettings) *fluentforwardExporter {
-	settings.Logger.Info("using the Fluent Forward exporter")
+	settings.Logger.Info("Creating the Fluent Forward exporter")
 
 	return &fluentforwardExporter{
 		config:   config,
@@ -30,20 +31,27 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 	}
 }
 
-func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
-	// move function into a translator
-	m := make(map[string]interface{})
-	m["severity"] = lr.SeverityText()
-	m["message"] = lr.Body().AsString()
-	for key, val := range f.config.DefaultLabelsEnabled {
-		if val {
-			attribute, found := lr.Attributes().Get(key)
-			if found {
-				m[key] = attribute.AsString()
-			}
-		}
+func (f *fluentforwardExporter) start(_ context.Context, host component.Host) error {
+	client := fclient.New(fclient.ConnectionOptions{
+		Factory: &fclient.ConnFactory{
+			Address: f.config.Endpoint,
+			Timeout: f.config.ConnectionTimeout,
+		},
+		RequireAck: f.config.RequireAck,
+	})
+
+	if err := client.Connect(); err != nil {
+		f.settings.Logger.Error(fmt.Sprintf("The fluentforward exporter failed to connect to its endpoint %s when starting", f.config.Endpoint))
 	}
-	return m
+
+	f.client = client
+
+	return nil
+}
+
+func (f *fluentforwardExporter) stop(context.Context) (err error) {
+	f.wg.Wait()
+	return f.client.Disconnect()
 }
 
 func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) error {
@@ -72,55 +80,42 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 	return f.sendForward(entries)
 }
 
-func (f *fluentforwardExporter) sendCompressed(entries []fproto.EntryExt) error {
-	err := f.client.SendCompressed(f.config.Tag, entries)
+func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
+	// move function into a translator
+	m := make(map[string]interface{})
+	m["severity"] = lr.SeverityText()
+	m["message"] = lr.Body().AsString()
+	for key, val := range f.config.DefaultLabelsEnabled {
+		if val {
+			attribute, found := lr.Attributes().Get(key)
+			if found {
+				m[key] = attribute.AsString()
+			}
+		}
+	}
+	return m
+}
+
+type sendFunc func(string, protocol.EntryList) error
+
+func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.EntryExt) error {
+	err := sendMethod(f.config.Tag, entries)
 	if err != nil {
 		if errr := f.client.Reconnect(); errr != nil {
 			return errr
 		}
-		err := f.client.SendCompressed(f.config.Tag, entries)
+		err = sendMethod(f.config.Tag, entries)
 		if err != nil {
 			return err
 		}
-		return err
 	}
 	return nil
+}
+
+func (f *fluentforwardExporter) sendCompressed(entries []fproto.EntryExt) error {
+	return f.send(f.client.SendCompressed, entries)
 }
 
 func (f *fluentforwardExporter) sendForward(entries []fproto.EntryExt) error {
-	err := f.client.SendForward(f.config.Tag, entries)
-	if err != nil {
-		if errr := f.client.Reconnect(); errr != nil {
-			return errr
-		}
-		err := f.client.SendForward(f.config.Tag, entries)
-		if err != nil {
-			return err
-		}
-		return err
-	}
-	return nil
-}
-
-func (f *fluentforwardExporter) start(_ context.Context, host component.Host) error {
-	client := fclient.New(fclient.ConnectionOptions{
-		Factory: &fclient.ConnFactory{
-			Address: f.config.Endpoint,
-			Timeout: f.config.ConnectionTimeout,
-		},
-		RequireAck: f.config.RequireAck,
-	})
-
-	if err := client.Connect(); err != nil {
-		f.settings.Logger.Error(fmt.Sprintf("The fluentforward exporter failed to connect to its endpoint %s when starting", f.config.Endpoint))
-	}
-
-	f.client = client
-
-	return nil
-}
-
-func (f *fluentforwardExporter) stop(context.Context) (err error) {
-	f.wg.Wait()
-	return f.client.Disconnect()
+	return f.send(f.client.SendForward, entries)
 }
