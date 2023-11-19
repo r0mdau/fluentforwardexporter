@@ -22,7 +22,6 @@ TODO:
 
 - TLS support
 - Shared key support
-- Handling overloaded endpoint
 - Unit tests
 
 ## Getting Started
@@ -36,12 +35,12 @@ TODO:
 | require_ack| no | false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
 | tag | no | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | no | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
-
-If `default_labels_enabled` is omitted then default labels will be added. If one of the labels is omitted in `default_labels_enabled` then this label will be added.
+| default_labels_enabled | no | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |
 
 See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
-Example that will add only the `time` attribute in the log record:
+Example, for `default_labels_enabled` that will add only the `time` attribute in the log record:
+
 ```yaml
 exporters:
   fluentforward:
@@ -63,6 +62,22 @@ OpenTelemetry uses `record.severity` to track log levels.
 
 ## Advanced Configuration
 
-Those helper files are leveraged to provide additional capabilities automatically:
+Queued retry capabilities are enabled by default, see the [Exporter Helper queuing and retry settings](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/exporterhelper/README.md) to fine tune them.
 
-- [Queuing and retry settings](https://github.com/open-telemetry/opentelemetry-collector/blob/main/exporter/exporterhelper/README.md)
+Example usage:
+
+```yaml
+exporters:
+  fluentforward:
+    endpoint: a.new.fluentforward.target:24224
+    connection_timeout: 10s
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 5m
+    sending_queue:
+      enabled: true
+      num_consumers: 10
+      queue_size: 2000
+```
