@@ -1,7 +1,7 @@
 fluentforward:
-  endpoint: "a.new.fluentforward.target:24224"
+  endpoint: "localhost:24224"
 fluentforward/allsettings:
-  endpoint: "a.new.fluentforward.target:24224"
+  endpoint: "localhost:24224"
   connection_timeout: 30s
   require_ack: true
   tag: nginx
