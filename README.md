@@ -22,7 +22,7 @@ TODO:
 
 - TLS support
 - Shared key support
-- Unit tests
+- Some exporter unit tests
 
 ## Getting Started
 
