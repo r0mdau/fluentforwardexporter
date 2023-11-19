@@ -5,7 +5,7 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 
 import (
 	"fmt"
-	"net/url"
+	"net"
 	"time"
 
 	"go.opentelemetry.io/collector/component"
@@ -47,8 +47,10 @@ func (config *Config) Validate() error {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
 	}
 
-	if _, err := url.Parse(config.Endpoint); config.Endpoint == "" || err != nil {
-		return fmt.Errorf("\"endpoint\" must be a valid URL")
+	// Resolve TCP address just to ensure that it is a valid one. It is better
+	// to fail here than at when the exporter is started.
+	if _, err := net.ResolveTCPAddr("tcp", config.Endpoint); err != nil {
+		return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
 	}
 	return nil
 }

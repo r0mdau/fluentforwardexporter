@@ -5,6 +5,7 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 
 import (
 	"context"
+	"fmt"
 	"sync"
 
 	fclient "github.com/IBM/fluent-forward-go/fluent/client"
@@ -66,12 +67,12 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 	}
 
 	if f.config.CompressGzip {
-		return f.SendCompressed(entries)
+		return f.sendCompressed(entries)
 	}
-	return f.SendForward(entries)
+	return f.sendForward(entries)
 }
 
-func (f *fluentforwardExporter) SendCompressed(entries []fproto.EntryExt) error {
+func (f *fluentforwardExporter) sendCompressed(entries []fproto.EntryExt) error {
 	err := f.client.SendCompressed(f.config.Tag, entries)
 	if err != nil {
 		if errr := f.client.Reconnect(); errr != nil {
@@ -86,7 +87,7 @@ func (f *fluentforwardExporter) SendCompressed(entries []fproto.EntryExt) error 
 	return nil
 }
 
-func (f *fluentforwardExporter) SendForward(entries []fproto.EntryExt) error {
+func (f *fluentforwardExporter) sendForward(entries []fproto.EntryExt) error {
 	err := f.client.SendForward(f.config.Tag, entries)
 	if err != nil {
 		if errr := f.client.Reconnect(); errr != nil {
@@ -111,7 +112,7 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 	})
 
 	if err := client.Connect(); err != nil {
-		return err
+		f.settings.Logger.Error(fmt.Sprintf("The fluentforward exporter failed to connect to its endpoint %s when starting", f.config.Endpoint))
 	}
 
 	f.client = client
@@ -121,5 +122,5 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 
 func (f *fluentforwardExporter) stop(context.Context) (err error) {
 	f.wg.Wait()
-	return nil
+	return f.client.Disconnect()
 }

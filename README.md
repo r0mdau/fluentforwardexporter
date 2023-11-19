@@ -47,6 +47,7 @@ exporters:
   fluentforward:
     endpoint: a.new.fluentforward.target:24224
     connection_timeout: 10s
+    require_ack: true
     tag: nginx
     compress_gzip: true
     default_labels_enabled:
