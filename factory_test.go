@@ -47,6 +47,7 @@ func TestNewExporterFullConfig(t *testing.T) {
 					Enabled:            true,
 					InsecureSkipVerify: false,
 				},
+				SharedKey: "otelcol-dev",
 			},
 			RequireAck:   true,
 			Tag:          "tag",

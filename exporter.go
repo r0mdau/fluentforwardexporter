@@ -33,6 +33,10 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 }
 
 func (f *fluentforwardExporter) start(_ context.Context, host component.Host) error {
+	connOptions := fclient.ConnectionOptions{
+		RequireAck: f.config.RequireAck,
+	}
+
 	connFactory := &fclient.ConnFactory{
 		Address: f.config.Endpoint,
 		Timeout: f.config.ConnectionTimeout,
@@ -42,17 +46,17 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 			InsecureSkipVerify: f.config.TLSSetting.InsecureSkipVerify,
 		}
 	}
+	connOptions.Factory = connFactory
 
-	client := fclient.New(fclient.ConnectionOptions{
-		Factory:    connFactory,
-		RequireAck: f.config.RequireAck,
-	})
-
-	if err := client.Connect(); err != nil {
-		f.settings.Logger.Error(fmt.Sprintf("The fluentforward exporter failed to connect to its endpoint %s when starting", f.config.Endpoint))
+	if f.config.SharedKey != "" {
+		connOptions.AuthInfo = fclient.AuthInfo{
+			SharedKey: []byte(f.config.SharedKey),
+		}
 	}
 
+	client := fclient.New(connOptions)
 	f.client = client
+	f.connectForward()
 
 	return nil
 }
@@ -60,6 +64,21 @@ func (f *fluentforwardExporter) start(_ context.Context, host component.Host) er
 func (f *fluentforwardExporter) stop(context.Context) (err error) {
 	f.wg.Wait()
 	return f.client.Disconnect()
+}
+
+// connectForward connects to the Fluent Forward endpoint and keep running otel even if the connection is failing
+func (f *fluentforwardExporter) connectForward() {
+	if err := f.client.Connect(); err != nil {
+		f.settings.Logger.Error(fmt.Sprintf("Failed to connect to the endpoint %s", f.config.Endpoint))
+	}
+	f.settings.Logger.Info(fmt.Sprintf("Successfull connection to the endpoint %s", f.config.Endpoint))
+
+	if f.config.SharedKey != "" {
+		if err := f.client.Handshake(); err != nil {
+			f.settings.Logger.Error(fmt.Sprintf("Failed to shared key handshake with the endpoint %s", f.config.Endpoint))
+		}
+		f.settings.Logger.Info("Successfull shared key handshake with the endpoint")
+	}
 }
 
 func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) error {
@@ -108,10 +127,13 @@ type sendFunc func(string, protocol.EntryList) error
 
 func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.EntryExt) error {
 	err := sendMethod(f.config.Tag, entries)
+	// sometimes the connection is lost, we try to reconnect and send the data again
 	if err != nil {
-		if errr := f.client.Reconnect(); errr != nil {
+		if errr := f.client.Disconnect(); errr != nil {
 			return errr
 		}
+		f.settings.Logger.Warn(fmt.Sprintf("Failed to send data to the endpoint %s, trying to reconnect", f.config.Endpoint))
+		f.connectForward()
 		err = sendMethod(f.config.Tag, entries)
 		if err != nil {
 			return err

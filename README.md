@@ -16,28 +16,21 @@ Forward is the protocol used by Fluentd to route message between peers.
 - Protocol specification: [Forward protocol specification v1](https://github.com/fluent/fluentd/wiki/Forward-Protocol-Specification-v1)
 - Library used [IBM/fluent-forward-go](https://github.com/IBM/fluent-forward-go) (MIT License)
 
-Do not use in production.
-
-TODO:
-
-- TLS support
-- Shared key support
-- Some exporter unit tests
-
 ## Getting Started
 
 ### Settings
 
-| Property | Mandatory | Default value | Type | Description |
-|---|---|---|---|---|
-| endpoint | yes |  | string | Target URL to send `Forward` log streams to |
-| connection_timeout | no | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
-| tls.enabled | no | false | bool | Enable TLS for privacy and data integrity |
-| tls.insecure_skip_verify | no | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
-| require_ack| no | false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
-| tag | no | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
-| compress_gzip | no | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
-| default_labels_enabled | no | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |
+| Property | Default value | Type | Description |
+|---|---|---|---|
+| endpoint |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
+| connection_timeout | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
+| tls.enabled | false | bool | Enable TLS for privacy and data integrity |
+| tls.insecure_skip_verify | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
+| shared_key | "" | string | A key string known by the server, used for authorization |
+| require_ack| false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
+| tag | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
+| compress_gzip | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
+| default_labels_enabled | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |
 
 See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
@@ -58,7 +51,7 @@ exporters:
       instance: false
 ```
 
-Example with TLS enabled:
+Example with TLS enabled and shared key:
 
 ```yaml
 exporters:
@@ -67,6 +60,7 @@ exporters:
     connection_timeout: 10s
     tls:
       enabled: true
+    shared_key: otelcol-dev
 ```
 
 ## Severity

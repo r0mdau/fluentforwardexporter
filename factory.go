@@ -35,6 +35,7 @@ func createDefaultConfig() component.Config {
 				Enabled:            false,
 				InsecureSkipVerify: false,
 			},
+			SharedKey: "",
 		},
 		RequireAck:   false,
 		Tag:          "tag",

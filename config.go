@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
-	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
@@ -19,10 +18,6 @@ import (
 type TLSClientSetting struct {
 	// Enabled defines if TLS is enabled or not.
 	Enabled bool `mapstructure:"enabled"`
-	// squash ensures fields are correctly decoded in embedded struct.
-	configtls.TLSSetting `mapstructure:",squash"`
-
-	// These are config options specific to client connections.
 
 	// InsecureSkipVerify will enable TLS but not verify the certificate.
 	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify"`
@@ -37,6 +32,9 @@ type TCPClientSettings struct {
 
 	// TLSSetting struct exposes TLS client configuration.
 	TLSSetting TLSClientSetting `mapstructure:"tls"`
+
+	// SharedKey is used for authorization with the server that knows it.
+	SharedKey string `mapstructure:"shared_key"`
 }
 
 // Config defines configuration for fluentforward exporter.

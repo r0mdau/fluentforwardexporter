@@ -39,6 +39,7 @@ func TestLoadConfigNewExporter(t *testing.T) {
 						Enabled:            true,
 						InsecureSkipVerify: true,
 					},
+					SharedKey: "otelcol-dev",
 				},
 				RequireAck:   true,
 				Tag:          "nginx",

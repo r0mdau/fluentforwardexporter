@@ -6,6 +6,7 @@ fluentforward/allsettings:
   tls:
     enabled: true
     insecure_skip_verify: true
+  shared_key: "otelcol-dev"
   require_ack: true
   tag: nginx
   compress_gzip: true
