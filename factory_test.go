@@ -43,6 +43,10 @@ func TestNewExporterFullConfig(t *testing.T) {
 			TCPClientSettings: TCPClientSettings{
 				Endpoint:          validEndpoint,
 				ConnectionTimeout: time.Second * 30,
+				TLSSetting: TLSClientSetting{
+					Enabled:            true,
+					InsecureSkipVerify: false,
+				},
 			},
 			RequireAck:   true,
 			Tag:          "tag",

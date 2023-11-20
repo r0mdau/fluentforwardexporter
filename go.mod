@@ -7,6 +7,7 @@ require (
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector/component v0.89.0
+	go.opentelemetry.io/collector/config/configtls v0.89.0
 	go.opentelemetry.io/collector/confmap v0.89.0
 	go.opentelemetry.io/collector/exporter v0.89.0
 	go.opentelemetry.io/collector/pdata v1.0.0-rcv0018
@@ -15,6 +16,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/uuid v1.3.1 // indirect
@@ -34,6 +36,7 @@ require (
 	github.com/tinylib/msgp v1.1.6 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/collector v0.89.0 // indirect
+	go.opentelemetry.io/collector/config/configopaque v0.89.0 // indirect
 	go.opentelemetry.io/collector/config/configtelemetry v0.89.0 // indirect
 	go.opentelemetry.io/collector/consumer v0.89.0 // indirect
 	go.opentelemetry.io/collector/extension v0.89.0 // indirect

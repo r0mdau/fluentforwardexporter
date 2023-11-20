@@ -3,6 +3,9 @@ fluentforward:
 fluentforward/allsettings:
   endpoint: "localhost:24224"
   connection_timeout: 30s
+  tls:
+    enabled: true
+    insecure_skip_verify: true
   require_ack: true
   tag: nginx
   compress_gzip: true

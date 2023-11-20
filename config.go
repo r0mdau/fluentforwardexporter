@@ -9,8 +9,24 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
+
+// TLSClientSetting contains TLS configurations that are specific to client
+// connections in addition to the common configurations. This should be used by
+// components configuring TLS client connections.
+type TLSClientSetting struct {
+	// Enabled defines if TLS is enabled or not.
+	Enabled bool `mapstructure:"enabled"`
+	// squash ensures fields are correctly decoded in embedded struct.
+	configtls.TLSSetting `mapstructure:",squash"`
+
+	// These are config options specific to client connections.
+
+	// InsecureSkipVerify will enable TLS but not verify the certificate.
+	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify"`
+}
 
 type TCPClientSettings struct {
 	// The target endpoint URI to send data to (e.g.: some.url:24224).
@@ -18,6 +34,9 @@ type TCPClientSettings struct {
 
 	// Connection Timeout parameter configures `net.Dialer`.
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
+
+	// TLSSetting struct exposes TLS client configuration.
+	TLSSetting TLSClientSetting `mapstructure:"tls"`
 }
 
 // Config defines configuration for fluentforward exporter.

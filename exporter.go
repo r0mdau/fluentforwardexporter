@@ -5,6 +5,7 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"sync"
 
@@ -32,11 +33,18 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 }
 
 func (f *fluentforwardExporter) start(_ context.Context, host component.Host) error {
+	connFactory := &fclient.ConnFactory{
+		Address: f.config.Endpoint,
+		Timeout: f.config.ConnectionTimeout,
+	}
+	if f.config.TLSSetting.Enabled {
+		connFactory.TLSConfig = &tls.Config{
+			InsecureSkipVerify: f.config.TLSSetting.InsecureSkipVerify,
+		}
+	}
+
 	client := fclient.New(fclient.ConnectionOptions{
-		Factory: &fclient.ConnFactory{
-			Address: f.config.Endpoint,
-			Timeout: f.config.ConnectionTimeout,
-		},
+		Factory:    connFactory,
 		RequireAck: f.config.RequireAck,
 	})
 
