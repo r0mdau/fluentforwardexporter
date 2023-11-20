@@ -32,6 +32,8 @@ TODO:
 |---|---|---|---|---|
 | endpoint | yes |  | string | Target URL to send `Forward` log streams to |
 | connection_timeout | no | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
+| tls.enabled | no | false | bool | Enable TLS for privacy and data integrity |
+| tls.insecure_skip_verify | no | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
 | require_ack| no | false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
 | tag | no | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | no | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
@@ -54,6 +56,17 @@ exporters:
       exporter: false
       job: false
       instance: false
+```
+
+Example with TLS enabled:
+
+```yaml
+exporters:
+  fluentforward:
+    endpoint: a.new.fluentforward.target:24224
+    connection_timeout: 10s
+    tls:
+      enabled: true
 ```
 
 ## Severity
