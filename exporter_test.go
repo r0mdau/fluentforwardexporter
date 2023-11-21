@@ -76,9 +76,8 @@ func TestStartInvalidEndpointErrorLog(t *testing.T) {
 
 	assert.NoError(t, err)
 	assert.NotNil(t, exporter.client)
-	require.Equal(t, 3, observedLogs.Len())
+	require.Equal(t, 2, observedLogs.Len())
 
 	assert.Equal(t, "Creating the Fluent Forward exporter", observedLogs.All()[0].Message)
 	assert.Equal(t, "Failed to connect to the endpoint invalidEndpoint", observedLogs.All()[1].Message)
-	assert.Equal(t, "Successfull connection to the endpoint invalidEndpoint", observedLogs.All()[2].Message)
 }
