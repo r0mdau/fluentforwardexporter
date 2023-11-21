@@ -70,12 +70,14 @@ func (f *fluentforwardExporter) stop(context.Context) (err error) {
 func (f *fluentforwardExporter) connectForward() {
 	if err := f.client.Connect(); err != nil {
 		f.settings.Logger.Error(fmt.Sprintf("Failed to connect to the endpoint %s", f.config.Endpoint))
+		return
 	}
 	f.settings.Logger.Info(fmt.Sprintf("Successfull connection to the endpoint %s", f.config.Endpoint))
 
 	if f.config.SharedKey != "" {
 		if err := f.client.Handshake(); err != nil {
-			f.settings.Logger.Error(fmt.Sprintf("Failed to shared key handshake with the endpoint %s", f.config.Endpoint))
+			f.settings.Logger.Error(fmt.Sprintf("Failed shared key handshake with the endpoint %s", f.config.Endpoint))
+			return
 		}
 		f.settings.Logger.Info("Successfull shared key handshake with the endpoint")
 	}
