@@ -24,8 +24,11 @@ Forward is the protocol used by Fluentd to route message between peers.
 |---|---|---|---|
 | endpoint |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
 | connection_timeout | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
-| tls.enabled | false | bool | Enable TLS for privacy and data integrity |
+| tls.insecure | true | bool | If set to **true**, the connexion is not secured with TLS. |
 | tls.insecure_skip_verify | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
+| tls.ca_file | "" | string | Used for mTLS. Path to the CA cert. For a client this verifies the server certificate |
+| tls.cert_file | "" | string | Used for mTLS. Path to the client TLS cert to use |
+| tls.key_file | "" | string | Used for mTLS. Path to the client TLS key to use |
 | shared_key | "" | string | A key string known by the server, used for authorization |
 | require_ack| false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
 | tag | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
@@ -59,8 +62,22 @@ exporters:
     endpoint: a.new.fluentforward.target:24224
     connection_timeout: 10s
     tls:
-      enabled: true
+      insecure: false
     shared_key: otelcol-dev
+```
+
+Example with mutual TLS authentication (mTLS):
+
+```yaml
+exporters:
+  fluentforward:
+    endpoint: a.new.fluentforward.target:24224
+    connection_timeout: 10s
+    tls:
+      insecure: false
+      ca_file: ca.crt.pem
+      cert_file: client.crt.pem
+      key_file: client.key.pem
 ```
 
 ## Severity

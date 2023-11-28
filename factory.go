@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
@@ -31,9 +32,14 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
-			TLSSetting: TLSClientSetting{
-				Enabled:            false,
+			TLSSetting: configtls.TLSClientSetting{
+				Insecure:           true,
 				InsecureSkipVerify: false,
+				TLSSetting: configtls.TLSSetting{
+					CAFile:   "",
+					CertFile: "",
+					KeyFile:  "",
+				},
 			},
 			SharedKey: "",
 		},

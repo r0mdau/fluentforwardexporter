@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
@@ -35,9 +36,14 @@ func TestLoadConfigNewExporter(t *testing.T) {
 				TCPClientSettings: TCPClientSettings{
 					Endpoint:          validEndpoint,
 					ConnectionTimeout: time.Second * 30,
-					TLSSetting: TLSClientSetting{
-						Enabled:            true,
+					TLSSetting: configtls.TLSClientSetting{
+						Insecure:           false,
 						InsecureSkipVerify: true,
+						TLSSetting: configtls.TLSSetting{
+							CAFile:   "ca.crt",
+							CertFile: "client.crt",
+							KeyFile:  "client.key",
+						},
 					},
 					SharedKey: "otelcol-dev",
 				},

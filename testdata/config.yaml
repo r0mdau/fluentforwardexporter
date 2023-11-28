@@ -4,8 +4,11 @@ fluentforward/allsettings:
   endpoint: "localhost:24224"
   connection_timeout: 30s
   tls:
-    enabled: true
+    insecure: false
     insecure_skip_verify: true
+    ca_file: ca.crt
+    cert_file: client.crt
+    key_file: client.key
   shared_key: "otelcol-dev"
   require_ack: true
   tag: nginx
