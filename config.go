@@ -9,19 +9,9 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
-
-// TLSClientSetting contains TLS configurations that are specific to client
-// connections in addition to the common configurations. This should be used by
-// components configuring TLS client connections.
-type TLSClientSetting struct {
-	// Enabled defines if TLS is enabled or not.
-	Enabled bool `mapstructure:"enabled"`
-
-	// InsecureSkipVerify will enable TLS but not verify the certificate.
-	InsecureSkipVerify bool `mapstructure:"insecure_skip_verify"`
-}
 
 type TCPClientSettings struct {
 	// The target endpoint URI to send data to (e.g.: some.url:24224).
@@ -31,7 +21,7 @@ type TCPClientSettings struct {
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
 
 	// TLSSetting struct exposes TLS client configuration.
-	TLSSetting TLSClientSetting `mapstructure:"tls"`
+	TLSSetting configtls.TLSClientSetting `mapstructure:"tls"`
 
 	// SharedKey is used for authorization with the server that knows it.
 	SharedKey string `mapstructure:"shared_key"`

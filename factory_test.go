@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
@@ -43,8 +44,8 @@ func TestNewExporterFullConfig(t *testing.T) {
 			TCPClientSettings: TCPClientSettings{
 				Endpoint:          validEndpoint,
 				ConnectionTimeout: time.Second * 30,
-				TLSSetting: TLSClientSetting{
-					Enabled:            true,
+				TLSSetting: configtls.TLSClientSetting{
+					Insecure:           true,
 					InsecureSkipVerify: false,
 				},
 				SharedKey: "otelcol-dev",
