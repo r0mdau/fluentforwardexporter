@@ -1,4 +1,4 @@
-type: fluentforward
+type: fluentforwardexporter
 
 status:
   class: exporter
