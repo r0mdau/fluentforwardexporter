@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"go.opencensus.io/stats/view"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter"
@@ -17,8 +18,7 @@ import (
 
 // NewFactory creates a factory for the fluentforward exporter.
 func NewFactory() exporter.Factory {
-	// later count failed log records
-	//_ = view.Register(metricViews()...)
+	_ = view.Register(metricViews()...)
 
 	return exporter.NewFactory(
 		metadata.Type,

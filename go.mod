@@ -6,6 +6,7 @@ require (
 	github.com/IBM/fluent-forward-go v0.2.2
 	github.com/cenkalti/backoff/v4 v4.2.1
 	github.com/stretchr/testify v1.8.4
+	go.opencensus.io v0.24.0
 	go.opentelemetry.io/collector/component v0.89.0
 	go.opentelemetry.io/collector/config/configtls v0.89.0
 	go.opentelemetry.io/collector/confmap v0.89.0
@@ -34,7 +35,6 @@ require (
 	github.com/philhofer/fwd v1.1.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/tinylib/msgp v1.1.6 // indirect
-	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/collector v0.89.0 // indirect
 	go.opentelemetry.io/collector/config/configopaque v0.89.0 // indirect
 	go.opentelemetry.io/collector/config/configtelemetry v0.89.0 // indirect
