@@ -13,7 +13,7 @@ import (
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
-	"github.com/r0mdau/fluentforwardexporter/internal/metadata"
+	"github.com/axoflow/fluentforwardexporter/internal/metadata"
 )
 
 // NewFactory creates a factory for the fluentforward exporter.
