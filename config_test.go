@@ -18,7 +18,7 @@ import (
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 
-	"github.com/r0mdau/fluentforwardexporter/internal/metadata"
+	"github.com/axoflow/fluentforwardexporter/internal/metadata"
 )
 
 func TestLoadConfigNewExporter(t *testing.T) {

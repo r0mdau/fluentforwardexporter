@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/IBM/fluent-forward-go v0.2.3-0.20240418091724-720f8df4306a
 	github.com/cenkalti/backoff/v4 v4.2.1
-	github.com/r0mdau/fluentforwardexporter v0.1.5
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/collector/component v0.94.0
 	go.opentelemetry.io/collector/config/configretry v0.94.0
@@ -64,5 +63,3 @@ require (
 	google.golang.org/protobuf v1.32.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/r0mdau/fluentforwardexporter => ../fluentforwardexporter
