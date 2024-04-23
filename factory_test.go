@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
@@ -59,7 +60,7 @@ func TestNewExporterFullConfig(t *testing.T) {
 				"job":      true,
 				"instance": true,
 			},
-			RetrySettings: exporterhelper.RetrySettings{
+			BackOffConfig: configretry.BackOffConfig{
 				Enabled:             true,
 				InitialInterval:     10 * time.Second,
 				MaxInterval:         1 * time.Minute,
