@@ -22,7 +22,7 @@ type TCPClientSettings struct {
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
 
 	// TLSSetting struct exposes TLS client configuration.
-	TLSSetting configtls.TLSClientSetting `mapstructure:"tls"`
+	TLSSetting configtls.ClientConfig `mapstructure:"tls"`
 
 	// SharedKey is used for authorization with the server that knows it.
 	SharedKey string `mapstructure:"shared_key"`
