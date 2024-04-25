@@ -37,10 +37,10 @@ func TestLoadConfigNewExporter(t *testing.T) {
 				TCPClientSettings: TCPClientSettings{
 					Endpoint:          validEndpoint,
 					ConnectionTimeout: time.Second * 30,
-					TLSSetting: configtls.TLSClientSetting{
+					TLSSetting: configtls.ClientConfig{
 						Insecure:           false,
 						InsecureSkipVerify: true,
-						TLSSetting: configtls.TLSSetting{
+						Config: configtls.Config{
 							CAFile:   "ca.crt",
 							CertFile: "client.crt",
 							KeyFile:  "client.key",

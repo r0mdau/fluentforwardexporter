@@ -33,10 +33,10 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
-			TLSSetting: configtls.TLSClientSetting{
+			TLSSetting: configtls.ClientConfig{
 				Insecure:           true,
 				InsecureSkipVerify: false,
-				TLSSetting: configtls.TLSSetting{
+				Config: configtls.Config{
 					CAFile:   "",
 					CertFile: "",
 					KeyFile:  "",
