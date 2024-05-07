@@ -6,12 +6,14 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	fclient "github.com/IBM/fluent-forward-go/fluent/client"
 	"github.com/IBM/fluent-forward-go/fluent/protocol"
 	fproto "github.com/IBM/fluent-forward-go/fluent/protocol"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
@@ -96,7 +98,7 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 				log := logs.At(k)
 				entry := fproto.EntryExt{
 					Timestamp: fproto.EventTimeNow(),
-					Record:    f.convertLogToMap(log),
+					Record:    f.convertLogToMap(log, rls.At(i)),
 				}
 				entries = append(entries, entry)
 			}
@@ -109,7 +111,7 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 	return f.sendForward(entries)
 }
 
-func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
+func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord, res plog.ResourceLogs) map[string]interface{} {
 	// move function into a translator
 	m := make(map[string]interface{})
 	m["severity"] = lr.SeverityText()
@@ -122,6 +124,51 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 			}
 		}
 	}
+	if f.config.KubernetesMetadata != nil {
+		key := f.config.KubernetesMetadata.Key
+		if f.config.KubernetesMetadata.Key == "" {
+			key = "kubernetes"
+		}
+		var namespace, container, pod, node string
+		var labels map[string]string
+		res.Resource().Attributes().Range(func(k string, v pcommon.Value) bool {
+			if k == "k8s.namespace.name" {
+				namespace = v.AsString()
+				return true
+			}
+			if k == "k8s.container.name" {
+				container = v.AsString()
+			}
+			if k == "k8s.pod.name" {
+				pod = v.AsString()
+			}
+			if k == "k8s.node.name" {
+				node = v.AsString()
+			}
+			if f.config.KubernetesMetadata.IncludePodLabels && strings.HasPrefix(k, "k8s.pod.labels.") {
+				if labels == nil {
+					labels = make(map[string]string)
+				}
+				labelKey := strings.TrimPrefix(k, "k8s.pod.labels.")
+				labels[labelKey] = v.AsString()
+			}
+			return true
+		})
+
+		k8sMetadata := map[string]interface{}{
+			"namespace_name": namespace,
+			"container_name": container,
+			"pod_name":       pod,
+			"host":           node,
+		}
+
+		if f.config.KubernetesMetadata.IncludePodLabels {
+			k8sMetadata["labels"] = labels
+		}
+
+		m[key] = k8sMetadata
+	}
+
 	return m
 }
 

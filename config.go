@@ -44,8 +44,36 @@ type Config struct {
 	// DefaultLabelsEnabled is a map of default attributes to be added to each log record.
 	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
 
+	// KubernetesMetadata includes kubernetes metadata as a nested object.
+	// It leverages resources attributes provided by k8sattributesprocessor
+	//
+	// Configuration example
+	// ```
+	// kubernetes:
+	//   key: kubernetes
+	//   include_pod_labels: true
+	// ```
+	//
+	// Resulting record structure:
+	// ```
+	// kubernetes:
+	//   namespace_name: default
+	//   container_name: nginx
+	//   pod_name: nginx-59f678c4b-p6lk6
+	//   labels:
+	//     app.kubernetes.io/name: nginx
+	//   host: gke-dev-node-pool-8-cf541dd4-98ro
+	// ```
+	//
+	KubernetesMetadata *KubernetesMetadata `mapstructure:"kubernetes_metadata,omitempty"`
+
 	exporterhelper.QueueConfig `mapstructure:"sending_queue"`
 	configretry.BackOffConfig  `mapstructure:"retry_on_failure"`
+}
+
+type KubernetesMetadata struct {
+	Key              string `mapstructure:"key"`
+	IncludePodLabels bool   `mapstructure:"include_pod_labels"`
 }
 
 var _ component.Config = (*Config)(nil)
