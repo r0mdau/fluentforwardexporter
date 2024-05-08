@@ -169,6 +169,8 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord, res plog.Reso
 		m[key] = k8sMetadata
 	}
 
+	f.settings.Logger.Debug(fmt.Sprintf("message %+v", m))
+
 	return m
 }
 

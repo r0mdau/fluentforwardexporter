@@ -49,7 +49,7 @@ type Config struct {
 	//
 	// Configuration example
 	// ```
-	// kubernetes:
+	// kubernetes_metadata:
 	//   key: kubernetes
 	//   include_pod_labels: true
 	// ```
