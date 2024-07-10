@@ -31,12 +31,12 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 	}
 }
 
-func (f *fluentforwardExporter) start(_ context.Context, host component.Host) error {
+func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) error {
 	connOptions := fclient.ConnectionOptions{
 		RequireAck: f.config.RequireAck,
 	}
 
-	tlsConfig, err := f.config.TLSSetting.LoadTLSConfig()
+	tlsConfig, err := f.config.TLSSetting.LoadTLSConfig(ctx)
 	if err != nil {
 		return err
 	}
