@@ -13,6 +13,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/confmap/confmaptest"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -36,10 +37,10 @@ func TestLoadConfigNewExporter(t *testing.T) {
 				TCPClientSettings: TCPClientSettings{
 					Endpoint:          validEndpoint,
 					ConnectionTimeout: time.Second * 30,
-					TLSSetting: configtls.TLSClientSetting{
+					ClientConfig: configtls.ClientConfig{
 						Insecure:           false,
 						InsecureSkipVerify: true,
-						TLSSetting: configtls.TLSSetting{
+						Config: configtls.Config{
 							CAFile:   "ca.crt",
 							CertFile: "client.crt",
 							KeyFile:  "client.key",
@@ -56,7 +57,7 @@ func TestLoadConfigNewExporter(t *testing.T) {
 					"job":      false,
 					"instance": false,
 				},
-				RetrySettings: exporterhelper.RetrySettings{
+				BackOffConfig: configretry.BackOffConfig{
 					Enabled:             true,
 					InitialInterval:     10 * time.Second,
 					MaxInterval:         1 * time.Minute,
@@ -80,7 +81,7 @@ func TestLoadConfigNewExporter(t *testing.T) {
 
 			sub, err := cm.Sub(tt.id.String())
 			require.NoError(t, err)
-			require.NoError(t, component.UnmarshalConfig(sub, cfg))
+			require.NoError(t, sub.Unmarshal(cfg))
 
 			assert.NoError(t, component.ValidateConfig(cfg))
 			assert.Equal(t, tt.expected, cfg)

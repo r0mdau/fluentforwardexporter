@@ -9,10 +9,12 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
 )
 
+// TCPClientSettings defines common settings for a TCP client.
 type TCPClientSettings struct {
 	// The target endpoint URI to send data to (e.g.: some.url:24224).
 	Endpoint string `mapstructure:"endpoint"`
@@ -20,8 +22,8 @@ type TCPClientSettings struct {
 	// Connection Timeout parameter configures `net.Dialer`.
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
 
-	// TLSSetting struct exposes TLS client configuration.
-	TLSSetting configtls.TLSClientSetting `mapstructure:"tls"`
+	// ClientConfig struct exposes TLS client configuration.
+	ClientConfig configtls.ClientConfig `mapstructure:"tls"`
 
 	// SharedKey is used for authorization with the server that knows it.
 	SharedKey string `mapstructure:"shared_key"`
@@ -44,11 +46,12 @@ type Config struct {
 	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
 
 	exporterhelper.QueueSettings `mapstructure:"sending_queue"`
-	exporterhelper.RetrySettings `mapstructure:"retry_on_failure"`
+	configretry.BackOffConfig    `mapstructure:"retry_on_failure"`
 }
 
 var _ component.Config = (*Config)(nil)
 
+// Validate checks if the configuration is valid
 func (config *Config) Validate() error {
 	if err := config.QueueSettings.Validate(); err != nil {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
