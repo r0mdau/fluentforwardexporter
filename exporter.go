@@ -36,7 +36,7 @@ func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) 
 		RequireAck: f.config.RequireAck,
 	}
 
-	tlsConfig, err := f.config.TLSSetting.LoadTLSConfig(ctx)
+	tlsConfig, err := f.config.ClientConfig.LoadTLSConfig(ctx)
 	if err != nil {
 		return err
 	}
