@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -32,10 +33,10 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
-			TLSSetting: configtls.TLSClientSetting{
+			ClientConfig: configtls.ClientConfig{
 				Insecure:           true,
 				InsecureSkipVerify: false,
-				TLSSetting: configtls.TLSSetting{
+				Config: configtls.Config{
 					CAFile:   "",
 					CertFile: "",
 					KeyFile:  "",
@@ -52,7 +53,7 @@ func createDefaultConfig() component.Config {
 			"job":      true,
 			"instance": true,
 		},
-		RetrySettings: exporterhelper.NewDefaultRetrySettings(),
+		BackOffConfig: configretry.NewDefaultBackOffConfig(),
 		QueueSettings: exporterhelper.NewDefaultQueueSettings(),
 	}
 }
@@ -68,7 +69,7 @@ func createLogsExporter(ctx context.Context, set exporter.CreateSettings, config
 		exp.pushLogData,
 		// explicitly disable since we rely on net.Dialer timeout logic.
 		exporterhelper.WithTimeout(exporterhelper.TimeoutSettings{Timeout: 0}),
-		exporterhelper.WithRetry(exporterConfig.RetrySettings),
+		exporterhelper.WithRetry(exporterConfig.BackOffConfig),
 		exporterhelper.WithQueue(exporterConfig.QueueSettings),
 		exporterhelper.WithStart(exp.start),
 		exporterhelper.WithShutdown(exp.stop),
