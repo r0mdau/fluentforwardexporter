@@ -33,7 +33,7 @@ func createDefaultConfig() component.Config {
 		TCPClientSettings: TCPClientSettings{
 			Endpoint:          "localhost:24224",
 			ConnectionTimeout: time.Second * 30,
-			TLSSetting: configtls.ClientConfig{
+			ClientConfig: configtls.ClientConfig{
 				Insecure:           true,
 				InsecureSkipVerify: false,
 				Config: configtls.Config{
@@ -58,7 +58,7 @@ func createDefaultConfig() component.Config {
 	}
 }
 
-func createLogsExporter(ctx context.Context, set exporter.CreateSettings, config component.Config) (exporter.Logs, error) {
+func createLogsExporter(ctx context.Context, set exporter.Settings, config component.Config) (exporter.Logs, error) {
 	exporterConfig := config.(*Config)
 	exp := newExporter(exporterConfig, set.TelemetrySettings)
 

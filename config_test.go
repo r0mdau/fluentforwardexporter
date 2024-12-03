@@ -37,38 +37,38 @@ func TestLoadConfigNewExporter(t *testing.T) {
 				TCPClientSettings: TCPClientSettings{
 					Endpoint:          validEndpoint,
 					ConnectionTimeout: time.Second * 30,
-					TLSSetting: configtls.ClientConfig{
-						Insecure:           false,
-						InsecureSkipVerify: true,
+					ClientConfig: configtls.ClientConfig{
+						Insecure:           true,
+						InsecureSkipVerify: false,
 						Config: configtls.Config{
-							CAFile:   "ca.crt",
-							CertFile: "client.crt",
-							KeyFile:  "client.key",
+							CAFile:   "",
+							CertFile: "",
+							KeyFile:  "",
 						},
 					},
-					SharedKey: "otelcol-dev",
+					SharedKey: "",
 				},
-				RequireAck:   true,
-				Tag:          "nginx",
-				CompressGzip: true,
+				RequireAck:   false,
+				Tag:          "tag",
+				CompressGzip: false,
 				DefaultLabelsEnabled: map[string]bool{
 					"time":     true,
-					"exporter": false,
-					"job":      false,
-					"instance": false,
+					"exporter": true,
+					"job":      true,
+					"instance": true,
 				},
 				BackOffConfig: configretry.BackOffConfig{
 					Enabled:             true,
-					InitialInterval:     10 * time.Second,
-					MaxInterval:         1 * time.Minute,
-					MaxElapsedTime:      10 * time.Minute,
+					InitialInterval:     5 * time.Second,
+					MaxInterval:         30 * time.Second,
+					MaxElapsedTime:      5 * time.Minute,
 					RandomizationFactor: backoff.DefaultRandomizationFactor,
 					Multiplier:          backoff.DefaultMultiplier,
 				},
 				QueueConfig: exporterhelper.QueueConfig{
 					Enabled:      true,
-					NumConsumers: 2,
-					QueueSize:    10,
+					NumConsumers: 10,
+					QueueSize:    1000,
 				},
 			},
 		},
@@ -81,7 +81,7 @@ func TestLoadConfigNewExporter(t *testing.T) {
 
 			sub, err := cm.Sub(tt.id.String())
 			require.NoError(t, err)
-			require.NoError(t, component.UnmarshalConfig(sub, cfg))
+			require.NoError(t, sub.Unmarshal(cfg))
 
 			assert.NoError(t, component.ValidateConfig(cfg))
 			assert.Equal(t, tt.expected, cfg)
