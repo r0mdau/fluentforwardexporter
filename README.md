@@ -35,6 +35,9 @@ Forward is the protocol used by Fluentd to route message between peers.
 | tag | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
 | default_labels_enabled | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |
+| kubernetes_metadata.key |  | string | KubernetesMetadata includes kubernetes metadata as a nested object. It leverages resources attributes provided by k8sattributesprocessor |
+| kubernetes_metadata.include_pod_labels |  | bool | Whether pod labels should be added to the nested object |
+| connection_timeout | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
 
 See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
