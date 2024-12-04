@@ -111,6 +111,17 @@ func TestConfigValidate(t *testing.T) {
 			err: fmt.Errorf("exporter has an invalid TCP endpoint: address http://localhost:24224: too many colons in address"),
 		},
 		{
+			desc: "Endpoint is invalid but SkipFailOnInvalidTCPEndpoint is false",
+			cfg: &Config{
+				TCPClientSettings: TCPClientSettings{
+					Endpoint:          "http://localhost:24224",
+					ConnectionTimeout: time.Second * 30,
+				},
+				SkipFailOnInvalidTCPEndpoint: true,
+			},
+			err: nil,
+		},
+		{
 			desc: "Config is valid",
 			cfg: &Config{
 				TCPClientSettings: TCPClientSettings{

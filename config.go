@@ -33,6 +33,10 @@ type TCPClientSettings struct {
 type Config struct {
 	TCPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
 
+	// SkipFailOnInvalidTCPEndpoint controls whether to fail if the endpoint is invalid.
+	// This is useful for cases where the collector is started before the endpoint becomes available.
+	SkipFailOnInvalidTCPEndpoint bool `mapstructure:"skip_fail_on_invalid_tcp_endpoint"`
+
 	// RequireAck enables the acknowledgement feature.
 	RequireAck bool `mapstructure:"require_ack"`
 
@@ -59,8 +63,11 @@ func (config *Config) Validate() error {
 
 	// Resolve TCP address just to ensure that it is a valid one. It is better
 	// to fail here than at when the exporter is started.
-	if _, err := net.ResolveTCPAddr("tcp", config.Endpoint); err != nil {
-		return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
+	if !config.SkipFailOnInvalidTCPEndpoint {
+		if _, err := net.ResolveTCPAddr("tcp", config.Endpoint); err != nil {
+			return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
+		}
 	}
+
 	return nil
 }
