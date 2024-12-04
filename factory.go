@@ -62,7 +62,7 @@ func createLogsExporter(ctx context.Context, set exporter.Settings, config compo
 	exporterConfig := config.(*Config)
 	exp := newExporter(exporterConfig, set.TelemetrySettings)
 
-	return exporterhelper.NewLogsExporter(
+	return exporterhelper.NewLogs(
 		ctx,
 		set,
 		config,
