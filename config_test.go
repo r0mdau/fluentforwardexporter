@@ -35,7 +35,10 @@ func TestLoadConfigNewExporter(t *testing.T) {
 			id: component.NewIDWithName(metadata.Type, "allsettings"),
 			expected: &Config{
 				TCPClientSettings: TCPClientSettings{
-					Endpoint:          validEndpoint,
+					Endpoint: Endpoint{
+						TCPAddr:               validEndpoint,
+						ValidateTCPResolution: false,
+					},
 					ConnectionTimeout: time.Second * 30,
 					ClientConfig: configtls.ClientConfig{
 						Insecure:           false,
@@ -97,27 +100,37 @@ func TestConfigValidate(t *testing.T) {
 	}{
 		{
 			desc: "QueueSettings are invalid",
-			cfg:  &Config{QueueConfig: exporterhelper.QueueConfig{QueueSize: -1, Enabled: true}},
-			err:  fmt.Errorf("queue settings has invalid configuration"),
+			cfg: &Config{
+				QueueConfig: exporterhelper.QueueConfig{
+					QueueSize: -1,
+					Enabled:   true,
+				},
+			},
+			err: fmt.Errorf("queue settings has invalid configuration"),
 		},
 		{
 			desc: "Endpoint is invalid",
 			cfg: &Config{
 				TCPClientSettings: TCPClientSettings{
-					Endpoint:          "http://localhost:24224",
+					Endpoint: Endpoint{
+						TCPAddr:               "http://localhost:24224",
+						ValidateTCPResolution: true,
+					},
 					ConnectionTimeout: time.Second * 30,
 				},
 			},
 			err: fmt.Errorf("exporter has an invalid TCP endpoint: address http://localhost:24224: too many colons in address"),
 		},
 		{
-			desc: "Endpoint is invalid but SkipFailOnInvalidTCPEndpoint is false",
+			desc: "Endpoint is invalid but ValidateTCPResolution is false",
 			cfg: &Config{
 				TCPClientSettings: TCPClientSettings{
-					Endpoint:          "http://localhost:24224",
+					Endpoint: Endpoint{
+						TCPAddr:               "http://localhost:24224",
+						ValidateTCPResolution: false,
+					},
 					ConnectionTimeout: time.Second * 30,
 				},
-				SkipFailOnInvalidTCPEndpoint: true,
 			},
 			err: nil,
 		},
@@ -125,7 +138,10 @@ func TestConfigValidate(t *testing.T) {
 			desc: "Config is valid",
 			cfg: &Config{
 				TCPClientSettings: TCPClientSettings{
-					Endpoint:          validEndpoint,
+					Endpoint: Endpoint{
+						TCPAddr:               validEndpoint,
+						ValidateTCPResolution: true,
+					},
 					ConnectionTimeout: time.Second * 30,
 				},
 			},

@@ -16,8 +16,8 @@ import (
 
 // TCPClientSettings defines common settings for a TCP client.
 type TCPClientSettings struct {
-	// The target endpoint URI to send data to (e.g.: some.url:24224).
-	Endpoint string `mapstructure:"endpoint"`
+	// Endpoint to send logs to.
+	Endpoint `mapstructure:"endpoint"`
 
 	// Connection Timeout parameter configures `net.Dialer`.
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
@@ -32,10 +32,6 @@ type TCPClientSettings struct {
 // Config defines configuration for fluentforward exporter.
 type Config struct {
 	TCPClientSettings `mapstructure:",squash"` // squash ensures fields are correctly decoded in embedded struct.
-
-	// SkipFailOnInvalidTCPEndpoint controls whether to fail if the endpoint is invalid.
-	// This is useful for cases where the collector is started before the endpoint becomes available.
-	SkipFailOnInvalidTCPEndpoint bool `mapstructure:"skip_fail_on_invalid_tcp_endpoint"`
 
 	// RequireAck enables the acknowledgement feature.
 	RequireAck bool `mapstructure:"require_ack"`
@@ -53,6 +49,13 @@ type Config struct {
 	configretry.BackOffConfig  `mapstructure:"retry_on_failure"`
 }
 
+type Endpoint struct {
+	// TCPAddr is the address of the server to connect to.
+	TCPAddr string `mapstructure:"tcp_addr"`
+	// Controls whether to validate the tcp address.
+	ValidateTCPResolution bool `mapstructure:"validate_tcp_resolution"`
+}
+
 var _ component.Config = (*Config)(nil)
 
 // Validate checks if the configuration is valid
@@ -61,10 +64,10 @@ func (config *Config) Validate() error {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
 	}
 
-	// Resolve TCP address just to ensure that it is a valid one. It is better
-	// to fail here than at when the exporter is started.
-	if !config.SkipFailOnInvalidTCPEndpoint {
-		if _, err := net.ResolveTCPAddr("tcp", config.Endpoint); err != nil {
+	if config.TCPClientSettings.Endpoint.ValidateTCPResolution {
+		// Resolve TCP address just to ensure that it is a valid one. It is better
+		// to fail here than at when the exporter is started.
+		if _, err := net.ResolveTCPAddr("tcp", config.Endpoint.TCPAddr); err != nil {
 			return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
 		}
 	}

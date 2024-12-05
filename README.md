@@ -22,7 +22,8 @@ Forward is the protocol used by Fluentd to route message between peers.
 
 | Property | Default value | Type | Description |
 |---|---|---|---|
-| endpoint |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
+| endpoint.tcp_addr |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
+| endpoint.validate_tcp_resolution | false | bool | Controls whether to validate the tcp address. |
 | connection_timeout | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
 | tls.insecure | true | bool | If set to **true**, the connexion is not secured with TLS. |
 | tls.insecure_skip_verify | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
@@ -31,7 +32,6 @@ Forward is the protocol used by Fluentd to route message between peers.
 | tls.key_file | "" | string | Used for mTLS. Path to the client TLS key to use |
 | shared_key | "" | string | A key string known by the server, used for authorization |
 | require_ack| false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
-| skip_fail_on_invalid_tcp_endpoint | false | bool | Controls whether to fail if the endpoint is invalid. This is useful for cases where the collector is started before the endpoint becomes available |
 | tag | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
 | default_labels_enabled | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |

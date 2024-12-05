@@ -30,7 +30,10 @@ func TestNewExporterMinimalConfig(t *testing.T) {
 	t.Run("with valid config", func(t *testing.T) {
 		config := &Config{
 			TCPClientSettings: TCPClientSettings{
-				Endpoint:          validEndpoint,
+				Endpoint: Endpoint{
+					TCPAddr:               validEndpoint,
+					ValidateTCPResolution: true,
+				},
 				ConnectionTimeout: time.Second * 30,
 			},
 		}
@@ -43,7 +46,10 @@ func TestNewExporterFullConfig(t *testing.T) {
 	t.Run("with valid config", func(t *testing.T) {
 		config := &Config{
 			TCPClientSettings: TCPClientSettings{
-				Endpoint:          validEndpoint,
+				Endpoint: Endpoint{
+					TCPAddr:               validEndpoint,
+					ValidateTCPResolution: true,
+				},
 				ConnectionTimeout: time.Second * 30,
 				ClientConfig: configtls.ClientConfig{
 					Insecure:           true,
@@ -82,7 +88,10 @@ func TestNewExporterFullConfig(t *testing.T) {
 func TestStartAlwaysReturnsNil(t *testing.T) {
 	config := &Config{
 		TCPClientSettings: TCPClientSettings{
-			Endpoint:          validEndpoint,
+			Endpoint: Endpoint{
+				TCPAddr:               validEndpoint,
+				ValidateTCPResolution: true,
+			},
 			ConnectionTimeout: time.Second * 30,
 		},
 	}
@@ -94,7 +103,10 @@ func TestStartAlwaysReturnsNil(t *testing.T) {
 func TestStopAlwaysReturnsNil(t *testing.T) {
 	config := &Config{
 		TCPClientSettings: TCPClientSettings{
-			Endpoint:          validEndpoint,
+			Endpoint: Endpoint{
+				TCPAddr:               validEndpoint,
+				ValidateTCPResolution: true,
+			},
 			ConnectionTimeout: time.Second * 30,
 		},
 	}

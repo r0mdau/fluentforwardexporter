@@ -31,7 +31,10 @@ func NewFactory() exporter.Factory {
 func createDefaultConfig() component.Config {
 	return &Config{
 		TCPClientSettings: TCPClientSettings{
-			Endpoint:          "localhost:24224",
+			Endpoint: Endpoint{
+				TCPAddr:               "localhost:24224",
+				ValidateTCPResolution: false,
+			},
 			ConnectionTimeout: time.Second * 30,
 			ClientConfig: configtls.ClientConfig{
 				Insecure:           true,
