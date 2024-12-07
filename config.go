@@ -16,8 +16,8 @@ import (
 
 // TCPClientSettings defines common settings for a TCP client.
 type TCPClientSettings struct {
-	// The target endpoint URI to send data to (e.g.: some.url:24224).
-	Endpoint string `mapstructure:"endpoint"`
+	// Endpoint to send logs to.
+	Endpoint `mapstructure:"endpoint"`
 
 	// Connection Timeout parameter configures `net.Dialer`.
 	ConnectionTimeout time.Duration `mapstructure:"connection_timeout"`
@@ -49,6 +49,13 @@ type Config struct {
 	configretry.BackOffConfig  `mapstructure:"retry_on_failure"`
 }
 
+type Endpoint struct {
+	// TCPAddr is the address of the server to connect to.
+	TCPAddr string `mapstructure:"tcp_addr"`
+	// Controls whether to validate the tcp address.
+	ValidateTCPResolution bool `mapstructure:"validate_tcp_resolution"`
+}
+
 var _ component.Config = (*Config)(nil)
 
 // Validate checks if the configuration is valid
@@ -57,10 +64,13 @@ func (config *Config) Validate() error {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
 	}
 
-	// Resolve TCP address just to ensure that it is a valid one. It is better
-	// to fail here than at when the exporter is started.
-	if _, err := net.ResolveTCPAddr("tcp", config.Endpoint); err != nil {
-		return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
+	if config.TCPClientSettings.Endpoint.ValidateTCPResolution {
+		// Resolve TCP address just to ensure that it is a valid one. It is better
+		// to fail here than at when the exporter is started.
+		if _, err := net.ResolveTCPAddr("tcp", config.Endpoint.TCPAddr); err != nil {
+			return fmt.Errorf("exporter has an invalid TCP endpoint: %w", err)
+		}
 	}
+
 	return nil
 }

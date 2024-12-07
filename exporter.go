@@ -41,7 +41,7 @@ func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) 
 		return err
 	}
 	connFactory := &fclient.ConnFactory{
-		Address:   f.config.Endpoint,
+		Address:   f.config.Endpoint.TCPAddr,
 		Timeout:   f.config.ConnectionTimeout,
 		TLSConfig: tlsConfig,
 	}
@@ -69,14 +69,14 @@ func (f *fluentforwardExporter) stop(context.Context) (err error) {
 // connectForward connects to the Fluent Forward endpoint and keep running otel even if the connection is failing
 func (f *fluentforwardExporter) connectForward() {
 	if err := f.client.Connect(); err != nil {
-		f.settings.Logger.Error(fmt.Sprintf("Failed to connect to the endpoint %s", f.config.Endpoint))
+		f.settings.Logger.Error(fmt.Sprintf("Failed to connect to the endpoint %s", f.config.Endpoint.TCPAddr))
 		return
 	}
-	f.settings.Logger.Info(fmt.Sprintf("Successfull connection to the endpoint %s", f.config.Endpoint))
+	f.settings.Logger.Info(fmt.Sprintf("Successfull connection to the endpoint %s", f.config.Endpoint.TCPAddr))
 
 	if f.config.SharedKey != "" {
 		if err := f.client.Handshake(); err != nil {
-			f.settings.Logger.Error(fmt.Sprintf("Failed shared key handshake with the endpoint %s", f.config.Endpoint))
+			f.settings.Logger.Error(fmt.Sprintf("Failed shared key handshake with the endpoint %s", f.config.Endpoint.TCPAddr))
 			return
 		}
 		f.settings.Logger.Info("Successfull shared key handshake with the endpoint")
@@ -134,7 +134,7 @@ func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.Entry
 		if errr := f.client.Disconnect(); errr != nil {
 			return errr
 		}
-		f.settings.Logger.Warn(fmt.Sprintf("Failed to send data to the endpoint %s, trying to reconnect", f.config.Endpoint))
+		f.settings.Logger.Warn(fmt.Sprintf("Failed to send data to the endpoint %s, trying to reconnect", f.config.Endpoint.TCPAddr))
 		f.connectForward()
 		err = sendMethod(f.config.Tag, entries)
 		if err != nil {

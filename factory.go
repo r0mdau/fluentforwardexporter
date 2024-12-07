@@ -31,7 +31,10 @@ func NewFactory() exporter.Factory {
 func createDefaultConfig() component.Config {
 	return &Config{
 		TCPClientSettings: TCPClientSettings{
-			Endpoint:          "localhost:24224",
+			Endpoint: Endpoint{
+				TCPAddr:               "localhost:24224",
+				ValidateTCPResolution: false,
+			},
 			ConnectionTimeout: time.Second * 30,
 			ClientConfig: configtls.ClientConfig{
 				Insecure:           true,
@@ -62,7 +65,7 @@ func createLogsExporter(ctx context.Context, set exporter.Settings, config compo
 	exporterConfig := config.(*Config)
 	exp := newExporter(exporterConfig, set.TelemetrySettings)
 
-	return exporterhelper.NewLogsExporter(
+	return exporterhelper.NewLogs(
 		ctx,
 		set,
 		config,
