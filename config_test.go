@@ -122,7 +122,7 @@ func TestConfigValidate(t *testing.T) {
 			err: fmt.Errorf("exporter has an invalid TCP endpoint: address http://localhost:24224: too many colons in address"),
 		},
 		{
-			desc: "Endpoint is invalid but ValidateTCPResolution is false",
+			desc: "Endpoint is invalid with ValidateTCPResolution false throw no error",
 			cfg: &Config{
 				TCPClientSettings: TCPClientSettings{
 					Endpoint: Endpoint{

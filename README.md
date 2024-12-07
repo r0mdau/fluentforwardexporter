@@ -23,7 +23,7 @@ Forward is the protocol used by Fluentd to route message between peers.
 | Property | Default value | Type | Description |
 |---|---|---|---|
 | endpoint.tcp_addr |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
-| endpoint.validate_tcp_resolution | false | bool | Controls whether to validate the tcp address. |
+| endpoint.validate_tcp_resolution | false | bool | Controls whether to validate the tcp address and fail at startup. |
 | connection_timeout | 30s | time.Duration | Maximum amount of time a dial will wait for a connect to complete |
 | tls.insecure | true | bool | If set to **true**, the connexion is not secured with TLS. |
 | tls.insecure_skip_verify | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
@@ -43,7 +43,8 @@ Example, for `default_labels_enabled` that will add only the `time` attribute in
 ```yaml
 exporters:
   fluentforward:
-    endpoint: a.new.fluentforward.target:24224
+    endpoint:
+      tcp_addr: a.new.fluentforward.target:24224
     connection_timeout: 10s
     require_ack: true
     tag: nginx
@@ -60,7 +61,8 @@ Example with TLS enabled and shared key:
 ```yaml
 exporters:
   fluentforward:
-    endpoint: a.new.fluentforward.target:24224
+    endpoint:
+      tcp_addr: a.new.fluentforward.target:24224
     connection_timeout: 10s
     tls:
       insecure: false
@@ -72,7 +74,8 @@ Example with mutual TLS authentication (mTLS):
 ```yaml
 exporters:
   fluentforward:
-    endpoint: a.new.fluentforward.target:24224
+    endpoint:
+      tcp_addr: a.new.fluentforward.target:24224
     connection_timeout: 10s
     tls:
       insecure: false
@@ -94,7 +97,8 @@ Example usage:
 ```yaml
 exporters:
   fluentforward:
-    endpoint: a.new.fluentforward.target:24224
+    endpoint:
+      tcp_addr: a.new.fluentforward.target:24224
     connection_timeout: 10s
     retry_on_failure:
       enabled: true

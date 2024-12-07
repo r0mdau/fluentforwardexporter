@@ -18,8 +18,7 @@ func TestNewExporter(t *testing.T) {
 	config := &Config{
 		TCPClientSettings: TCPClientSettings{
 			Endpoint: Endpoint{
-				TCPAddr:               validEndpoint,
-				ValidateTCPResolution: true,
+				TCPAddr: validEndpoint,
 			},
 			ConnectionTimeout: time.Second * 30,
 		},
@@ -40,8 +39,7 @@ func TestStart(t *testing.T) {
 	config := &Config{
 		TCPClientSettings: TCPClientSettings{
 			Endpoint: Endpoint{
-				TCPAddr:               validEndpoint,
-				ValidateTCPResolution: true,
+				TCPAddr: validEndpoint,
 			},
 			ConnectionTimeout: time.Second * 30,
 		},
