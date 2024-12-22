@@ -38,7 +38,7 @@ Forward is the protocol used by Fluentd to route message between peers.
 
 See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
-Example, for `default_labels_enabled` that will add only the `time` attribute in the log record:
+Example, for `default_labels_enabled` that will add only the `timestamp` attribute in the log record:
 
 ```yaml
 exporters:
@@ -50,11 +50,12 @@ exporters:
     tag: nginx
     compress_gzip: true
     default_labels_enabled:
-      time: true
-      exporter: false
-      job: false
-      instance: false
+      timestamp: true
+      level: false
+      message: false
 ```
+
+But a best practice is to have at least `timestamp`, `level` and `message` in the exported log record to a Fluent endpoint.
 
 Example with TLS enabled and shared key:
 
