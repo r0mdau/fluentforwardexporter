@@ -17,10 +17,9 @@ fluentforward/allsettings:
   tag: nginx
   compress_gzip: true
   default_labels_enabled:
-    time: true
-    exporter: false
-    job: false
-    instance: false
+    timestamp: true
+    level: true
+    message: true
   sending_queue:
     enabled: true
     num_consumers: 2

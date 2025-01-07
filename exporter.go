@@ -7,11 +7,13 @@ import (
 	"context"
 	"fmt"
 	"sync"
+	"time"
 
 	fclient "github.com/IBM/fluent-forward-go/fluent/client"
 	"github.com/IBM/fluent-forward-go/fluent/protocol"
 	fproto "github.com/IBM/fluent-forward-go/fluent/protocol"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 )
 
@@ -112,16 +114,23 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
 	// move function into a translator
 	m := make(map[string]interface{})
-	m["severity"] = lr.SeverityText()
-	m["message"] = lr.Body().AsString()
-	for key, val := range f.config.DefaultLabelsEnabled {
-		if val {
-			attribute, found := lr.Attributes().Get(key)
-			if found {
-				m[key] = attribute.AsString()
+	for k, v := range f.config.DefaultLabelsEnabled {
+		if v {
+			switch k {
+			case "level":
+				m[k] = lr.SeverityText()
+			case "message":
+				m[k] = lr.Body().AsString()
+			case "timestamp":
+				m[k] = lr.Timestamp().AsTime().UTC().Format(time.RFC3339Nano)
 			}
 		}
 	}
+
+	lr.Attributes().Range(func(k string, v pcommon.Value) bool {
+		m[k] = v.AsString()
+		return true
+	})
 	return m
 }
 
