@@ -49,6 +49,7 @@ type Config struct {
 	configretry.BackOffConfig  `mapstructure:"retry_on_failure"`
 }
 
+// Endpoint defines the address of the server to connect to.
 type Endpoint struct {
 	// TCPAddr is the address of the server to connect to.
 	TCPAddr string `mapstructure:"tcp_addr"`
