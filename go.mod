@@ -1,6 +1,6 @@
 module github.com/r0mdau/fluentforwardexporter
 
-go 1.24.0
+go 1.23.0
 
 require (
 	github.com/IBM/fluent-forward-go v0.2.2
