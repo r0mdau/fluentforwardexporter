@@ -68,10 +68,11 @@ func TestLoadConfigNewExporter(t *testing.T) {
 					RandomizationFactor: backoff.DefaultRandomizationFactor,
 					Multiplier:          backoff.DefaultMultiplier,
 				},
-				QueueConfig: exporterhelper.QueueConfig{
+				QueueBatchConfig: exporterhelper.QueueBatchConfig{
 					Enabled:      true,
 					NumConsumers: 2,
 					QueueSize:    10,
+					Sizer:        exporterhelper.RequestSizerTypeRequests,
 				},
 			},
 		},
@@ -101,7 +102,7 @@ func TestConfigValidate(t *testing.T) {
 		{
 			desc: "QueueSettings are invalid",
 			cfg: &Config{
-				QueueConfig: exporterhelper.QueueConfig{
+				QueueBatchConfig: exporterhelper.QueueBatchConfig{
 					QueueSize: -1,
 					Enabled:   true,
 				},

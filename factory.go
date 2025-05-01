@@ -55,8 +55,8 @@ func createDefaultConfig() component.Config {
 			"level":     true,
 			"message":   true,
 		},
-		BackOffConfig: configretry.NewDefaultBackOffConfig(),
-		QueueConfig:   exporterhelper.NewDefaultQueueConfig(),
+		BackOffConfig:    configretry.NewDefaultBackOffConfig(),
+		QueueBatchConfig: exporterhelper.NewDefaultQueueConfig(),
 	}
 }
 
@@ -72,7 +72,7 @@ func createLogsExporter(ctx context.Context, set exporter.Settings, config compo
 		// explicitly disable since we rely on net.Dialer timeout logic.
 		exporterhelper.WithTimeout(exporterhelper.TimeoutConfig{Timeout: 0}),
 		exporterhelper.WithRetry(exporterConfig.BackOffConfig),
-		exporterhelper.WithQueue(exporterConfig.QueueConfig),
+		exporterhelper.WithQueue(exporterConfig.QueueBatchConfig),
 		exporterhelper.WithStart(exp.start),
 		exporterhelper.WithShutdown(exp.stop),
 	)

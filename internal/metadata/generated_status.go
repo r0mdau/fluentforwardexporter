@@ -7,7 +7,8 @@ import (
 )
 
 var (
-	Type = component.MustNewType("fluentforward")
+	Type      = component.MustNewType("fluentforward")
+	ScopeName = "github.com/r0mdau/fluentforwardexporter"
 )
 
 const (

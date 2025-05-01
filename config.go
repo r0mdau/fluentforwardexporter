@@ -45,8 +45,8 @@ type Config struct {
 	// DefaultLabelsEnabled is a map of default attributes to be added to each log record.
 	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
 
-	exporterhelper.QueueConfig `mapstructure:"sending_queue"`
-	configretry.BackOffConfig  `mapstructure:"retry_on_failure"`
+	QueueBatchConfig          exporterhelper.QueueBatchConfig `mapstructure:"sending_queue"`
+	configretry.BackOffConfig `mapstructure:"retry_on_failure"`
 }
 
 // Endpoint defines the address of the server to connect to.
@@ -61,7 +61,7 @@ var _ component.Config = (*Config)(nil)
 
 // Validate checks if the configuration is valid
 func (config *Config) Validate() error {
-	if err := config.QueueConfig.Validate(); err != nil {
+	if err := config.QueueBatchConfig.Validate(); err != nil {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
 	}
 
