@@ -97,8 +97,10 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 			for k := 0; k < logs.Len(); k++ {
 				log := logs.At(k)
 				entry := fproto.EntryExt{
-					Timestamp: fproto.EventTimeNow(),
-					Record:    f.convertLogToMap(log),
+					Timestamp: fproto.EventTime{
+						Time: log.Timestamp().AsTime(),
+					},
+					Record: f.convertLogToMap(log),
 				}
 				entries = append(entries, entry)
 			}
