@@ -73,6 +73,7 @@ func TestLoadConfigNewExporter(t *testing.T) {
 					NumConsumers: 2,
 					QueueSize:    10,
 					Sizer:        exporterhelper.RequestSizerTypeRequests,
+					Batch:        exporterhelper.NewDefaultQueueConfig().Batch,
 				},
 			},
 		},
