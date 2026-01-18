@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configoptional"
 	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -45,7 +46,7 @@ type Config struct {
 	// DefaultLabelsEnabled is a map of default attributes to be added to each log record.
 	DefaultLabelsEnabled map[string]bool `mapstructure:"default_labels_enabled"`
 
-	QueueBatchConfig          exporterhelper.QueueBatchConfig `mapstructure:"sending_queue"`
+	QueueBatchConfig          configoptional.Optional[exporterhelper.QueueBatchConfig] `mapstructure:"sending_queue"`
 	configretry.BackOffConfig `mapstructure:"retry_on_failure"`
 }
 

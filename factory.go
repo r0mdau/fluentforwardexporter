@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/config/configoptional"
 	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter"
@@ -56,7 +57,7 @@ func createDefaultConfig() component.Config {
 			"message":   true,
 		},
 		BackOffConfig:    configretry.NewDefaultBackOffConfig(),
-		QueueBatchConfig: exporterhelper.NewDefaultQueueConfig(),
+		QueueBatchConfig: configoptional.Some(exporterhelper.NewDefaultQueueConfig()),
 	}
 }
 

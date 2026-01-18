@@ -11,6 +11,7 @@ import (
 	"github.com/cenkalti/backoff/v4"
 	"github.com/stretchr/testify/require"
 	"go.opentelemetry.io/collector/component/componenttest"
+	"go.opentelemetry.io/collector/config/configoptional"
 	"go.opentelemetry.io/collector/config/configretry"
 	"go.opentelemetry.io/collector/config/configtls"
 	"go.opentelemetry.io/collector/exporter/exporterhelper"
@@ -72,11 +73,10 @@ func TestNewExporterFullConfig(t *testing.T) {
 				RandomizationFactor: backoff.DefaultRandomizationFactor,
 				Multiplier:          backoff.DefaultMultiplier,
 			},
-			QueueBatchConfig: exporterhelper.QueueBatchConfig{
-				Enabled:      true,
+			QueueBatchConfig: configoptional.Some(exporterhelper.QueueBatchConfig{
 				NumConsumers: 2,
 				QueueSize:    10,
-			},
+			}),
 		}
 		exp := newExporter(config, componenttest.NewNopTelemetrySettings())
 		require.NotNil(t, exp)
