@@ -182,3 +182,85 @@ func TestPushLogDataConcurrentSendsDoNotInterleave(t *testing.T) {
 		})
 	}
 }
+
+func TestStartHandshakeTimesOutWhenServerIsSilent(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer func() { _ = ln.Close() }()
+	// Accept connections but never send the HELO the handshake waits for.
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			defer func() { _ = conn.Close() }()
+		}
+	}()
+
+	observedZapCore, observedLogs := observer.New(zap.InfoLevel)
+	config := createDefaultConfig().(*Config)
+	config.Endpoint.TCPAddr = ln.Addr().String()
+	config.ConnectionTimeout = 200 * time.Millisecond
+	config.SharedKey = "otelcol-dev"
+	exporter := newExporter(config, component.TelemetrySettings{Logger: zap.New(observedZapCore)})
+
+	done := make(chan error, 1)
+	go func() { done <- exporter.start(context.Background(), nil) }()
+	select {
+	case err := <-done:
+		require.NoError(t, err)
+	case <-time.After(5 * time.Second):
+		t.Fatal("start blocked on the handshake")
+	}
+	assert.Equal(t, 1, observedLogs.FilterMessageSnippet("Failed shared key handshake").Len())
+	assert.NoError(t, exporter.stop(context.Background()))
+}
+
+func TestPushLogDataTimesOutWhenServerStopsReading(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer func() { _ = ln.Close() }()
+	// Accept connections but never read, so the socket buffers fill up.
+	go func() {
+		for {
+			conn, err := ln.Accept()
+			if err != nil {
+				return
+			}
+			defer func() { _ = conn.Close() }()
+		}
+	}()
+
+	config := createDefaultConfig().(*Config)
+	config.Endpoint.TCPAddr = ln.Addr().String()
+	config.ConnectionTimeout = 200 * time.Millisecond
+	exporter := newExporter(config, component.TelemetrySettings{Logger: zap.NewNop()})
+	require.NoError(t, exporter.start(context.Background(), nil))
+	defer func() { _ = exporter.stop(context.Background()) }()
+
+	body := strings.Repeat("x", 4<<20)
+	done := make(chan error, 1)
+	go func() {
+		// Keep pushing until the full buffers make a write fail.
+		for i := 0; i < 50; i++ {
+			ld := plog.NewLogs()
+			lr := ld.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
+			lr.Body().SetStr(body)
+			if err := exporter.pushLogData(context.Background(), ld); err != nil {
+				done <- err
+				return
+			}
+		}
+		done <- nil
+	}()
+	select {
+	case err := <-done:
+		require.Error(t, err)
+		var netErr net.Error
+		require.ErrorAs(t, err, &netErr)
+		assert.True(t, netErr.Timeout())
+	case <-time.After(20 * time.Second):
+		t.Fatal("pushLogData blocked on a stalled server")
+	}
+}
