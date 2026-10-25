@@ -68,6 +68,10 @@ func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) 
 
 func (f *fluentforwardExporter) stop(context.Context) (err error) {
 	f.wg.Wait()
+	// client is nil when start was never called or failed before creating it.
+	if f.client == nil {
+		return nil
+	}
 	return f.client.Disconnect()
 }
 

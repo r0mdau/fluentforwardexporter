@@ -67,6 +67,23 @@ func TestStart(t *testing.T) {
 	assert.NotNil(t, exporter.client)
 }
 
+func TestStopWithoutStart(t *testing.T) {
+	exporter := newExporter(createDefaultConfig().(*Config), component.TelemetrySettings{Logger: zap.NewNop()})
+
+	assert.NoError(t, exporter.stop(context.Background()))
+}
+
+func TestStopAfterFailedStart(t *testing.T) {
+	config := createDefaultConfig().(*Config)
+	config.ClientConfig.Insecure = false
+	config.ClientConfig.CAFile = "does-not-exist.crt"
+	exporter := newExporter(config, component.TelemetrySettings{Logger: zap.NewNop()})
+
+	require.Error(t, exporter.start(context.Background(), nil))
+	assert.Nil(t, exporter.client)
+	assert.NoError(t, exporter.stop(context.Background()))
+}
+
 func TestStartInvalidEndpointErrorLog(t *testing.T) {
 
 	observedZapCore, observedLogs := observer.New(zap.InfoLevel)
