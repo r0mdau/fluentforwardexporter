@@ -28,12 +28,12 @@ jobs:
       with:
         go-version-file: go.mod
 
-    - name: Check go.mod and go.sum are tidy
+    - name: Go mod tidy
       run: |
         go mod tidy
         git diff --exit-code -- go.mod go.sum
 
-    - name: Check formatting
+    - name: Gofmt
       run: |
         unformatted=$(gofmt -l .)
         if [ -n "$unformatted" ]; then
