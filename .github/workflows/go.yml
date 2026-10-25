@@ -9,20 +9,87 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
 
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v5
 
     - name: Set up Go
-      uses: actions/setup-go@v4
+      uses: actions/setup-go@v6
       with:
         go-version-file: go.mod
+
+    - name: Go mod tidy
+      run: |
+        go mod tidy
+        git diff --exit-code -- go.mod go.sum
+
+    - name: Gofmt
+      run: |
+        unformatted=$(gofmt -l .)
+        if [ -n "$unformatted" ]; then
+          echo "The following files are not gofmt-ed:"
+          echo "$unformatted"
+          exit 1
+        fi
 
     - name: Build
       run: go build -v ./...
 
+    - name: Vet
+      run: go vet ./...
+
     - name: Test
-      run: go test -cover -v ./...
+      run: go test -race -cover -coverprofile=coverage.out -covermode=atomic -v ./...
+
+    - name: Coverage summary
+      run: go tool cover -func=coverage.out | tail -1 >> "$GITHUB_STEP_SUMMARY"
+
+    - name: Upload coverage
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage
+        path: coverage.out
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version-file: go.mod
+
+    - name: golangci-lint
+      uses: golangci/golangci-lint-action@v8
+      with:
+        version: v2.15.0
+        # Build golangci-lint with the job's Go toolchain so it supports the go.mod Go version.
+        install-mode: goinstall
+
+  vulncheck:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v5
+
+    # Use the latest patched Go release so the scan reports vulnerabilities in
+    # our dependencies rather than in an outdated standard library.
+    - name: Set up Go
+      uses: actions/setup-go@v6
+      with:
+        go-version: stable
+
+    - name: govulncheck
+      run: |
+        go install golang.org/x/vuln/cmd/govulncheck@v1.9.0
+        govulncheck ./...

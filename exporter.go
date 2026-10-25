@@ -10,7 +10,6 @@ import (
 	"time"
 
 	fclient "github.com/IBM/fluent-forward-go/fluent/client"
-	"github.com/IBM/fluent-forward-go/fluent/protocol"
 	fproto "github.com/IBM/fluent-forward-go/fluent/protocol"
 	"go.opentelemetry.io/collector/component"
 	"go.opentelemetry.io/collector/pdata/pcommon"
@@ -136,7 +135,7 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 	return m
 }
 
-type sendFunc func(string, protocol.EntryList) error
+type sendFunc func(string, fproto.EntryList) error
 
 func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.EntryExt) error {
 	err := sendMethod(f.config.Tag, entries)

@@ -1,0 +1,17 @@
+version: "2"
+
+linters:
+  settings:
+    staticcheck:
+      checks:
+        - all
+        # Keep explicit embedded-field selectors (e.g. config.TCPClientSettings.Endpoint)
+        # as they make the origin of config fields clearer.
+        - -QF1008
+        # Defaults also disabled by golangci-lint.
+        - -ST1000
+        - -ST1003
+        - -ST1016
+        - -ST1020
+        - -ST1021
+        - -ST1022
