@@ -22,19 +22,19 @@ Forward is the protocol used by Fluentd to route message between peers.
 
 | Property | Default value | Type | Description |
 |---|---|---|---|
-| endpoint.tcp_addr |  | string | **MANDATORY** Target URL to send `Forward` log streams to |
+| endpoint.tcp_addr | localhost:24224 | string | Target `host:port` to send `Forward` log streams to |
 | endpoint.validate_tcp_resolution | false | bool | Controls whether to validate the tcp address and fail at startup. |
 | connection_timeout | 30s | time.Duration | Maximum amount of time to wait for a dial, a shared key handshake read, an ack, or a single network write before failing. `0` disables the read and write deadlines |
-| tls.insecure | true | bool | If set to **true**, the connection is not secured with TLS. |
+| tls.insecure | true | bool | If set to **true** and no `tls.ca_file` is set, the connection is not secured with TLS. Setting `tls.ca_file` enables TLS even when this is **true** |
 | tls.insecure_skip_verify | false | bool | Controls whether the exporter verifies the server's certificate chain and host name. If **true**, any certificate is accepted and any host name. This mode is susceptible to man-in-the-middle attacks |
-| tls.ca_file | "" | string | Used for mTLS. Path to the CA cert. For a client this verifies the server certificate |
+| tls.ca_file | "" | string | Path to the CA cert used to verify the server certificate. If empty, the system root CAs are used |
 | tls.cert_file | "" | string | Used for mTLS. Path to the client TLS cert to use |
 | tls.key_file | "" | string | Used for mTLS. Path to the client TLS key to use |
 | shared_key | "" | string | A key string known by the server, used for authorization |
 | require_ack| false | bool | Protocol delivery acknowledgment for log streams : true = at-least-once, false = at-most-once |
 | tag | "tag" | string | Fluentd tag is a string separated by '.'s (e.g. myapp.access), and is used as the directions for Fluentd's internal routing engine |
 | compress_gzip | false | bool | Transparent data compression. You can use this feature to reduce the transferred payload size |
-| default_labels_enabled | true | map[string]bool | If omitted then default labels will be added. If one of the labels is omitted then this label will be added |
+| default_labels_enabled | `timestamp`, `level` and `message` all true | map[string]bool | Which default labels to add to each record. Only `timestamp`, `level` and `message` are recognized. A label left out of the map keeps its default (enabled); set it to `false` to drop it |
 
 See the default values in the method `createDefaultConfig()` in [factory.go](factory.go) file.
 
@@ -85,9 +85,19 @@ exporters:
       key_file: client.key.pem
 ```
 
-## Severity
+## Log record mapping
 
-OpenTelemetry uses `record.severity` to track log levels.
+Each OpenTelemetry log record becomes one entry in a `Forward` message sent with the configured `tag`:
+
+| Forward field | Source |
+|---|---|
+| event time | The log record `Timestamp`, or `ObservedTimestamp` when `Timestamp` is unset |
+| `timestamp` label | Same time as the event time, formatted as RFC 3339 with nanoseconds in UTC |
+| `level` label | The log record `SeverityText` (the severity number is not used) |
+| `message` label | The log record body, converted to a string |
+| other keys | Log record attributes, keeping their types (string, int, double, bool, bytes, array, map) |
+
+A log record attribute with the same name as a default label overrides it. Resource and scope attributes are not sent.
 
 ## Advanced Configuration
 
