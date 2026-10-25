@@ -325,3 +325,59 @@ func TestPushLogDataFallsBackToObservedTimestamp(t *testing.T) {
 		})
 	}
 }
+
+func TestPushLogDataKeepsAttributeTypes(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer func() { _ = ln.Close() }()
+
+	received := make(chan fproto.ForwardMessage, 1)
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		var m fproto.ForwardMessage
+		if err := m.DecodeMsg(msgp.NewReader(conn)); err == nil {
+			received <- m
+		}
+	}()
+
+	config := createDefaultConfig().(*Config)
+	config.Endpoint.TCPAddr = ln.Addr().String()
+	exporter := newExporter(config, component.TelemetrySettings{Logger: zap.NewNop()})
+	require.NoError(t, exporter.start(context.Background(), nil))
+	defer func() { assert.NoError(t, exporter.stop(context.Background())) }()
+
+	ld := plog.NewLogs()
+	attrs := ld.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty().Attributes()
+	attrs.PutStr("str", "value")
+	attrs.PutInt("int", 42)
+	attrs.PutDouble("double", 1.5)
+	attrs.PutBool("bool", true)
+	attrs.PutEmptyBytes("bytes").FromRaw([]byte{0x01, 0x02})
+	require.NoError(t, attrs.PutEmptySlice("slice").FromRaw([]any{"a", int64(1)}))
+	nested := attrs.PutEmptyMap("map")
+	nested.PutStr("key", "nested")
+	nested.PutInt("n", 7)
+	attrs.PutEmpty("empty")
+	require.NoError(t, exporter.pushLogData(context.Background(), ld))
+
+	select {
+	case m := <-received:
+		require.Len(t, m.Entries, 1)
+		record := m.Entries[0].Record.(map[string]any)
+		assert.Equal(t, "value", record["str"])
+		assert.Equal(t, int64(42), record["int"])
+		assert.Equal(t, 1.5, record["double"])
+		assert.Equal(t, true, record["bool"])
+		assert.Equal(t, []byte{0x01, 0x02}, record["bytes"])
+		assert.Equal(t, []any{"a", int64(1)}, record["slice"])
+		assert.Equal(t, map[string]any{"key": "nested", "n": int64(7)}, record["map"])
+		assert.Contains(t, record, "empty")
+		assert.Nil(t, record["empty"])
+	case <-time.After(5 * time.Second):
+		t.Fatal("server did not receive the message")
+	}
+}
