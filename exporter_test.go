@@ -103,7 +103,7 @@ func TestPushLogDataConcurrentSendsDoNotInterleave(t *testing.T) {
 		t.Run(fmt.Sprintf("compress=%v", compress), func(t *testing.T) {
 			ln, err := net.Listen("tcp", "127.0.0.1:0")
 			require.NoError(t, err)
-			defer ln.Close()
+			defer func() { _ = ln.Close() }()
 
 			const goroutines, perGoroutine = 10, 20
 			decodeErr := make(chan error, 1)
@@ -113,7 +113,7 @@ func TestPushLogDataConcurrentSendsDoNotInterleave(t *testing.T) {
 					decodeErr <- err
 					return
 				}
-				defer conn.Close()
+				defer func() { _ = conn.Close() }()
 				r := msgp.NewReader(conn)
 				for i := 0; i < goroutines*perGoroutine; i++ {
 					var err error
