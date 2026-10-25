@@ -21,6 +21,10 @@ type fluentforwardExporter struct {
 	settings component.TelemetrySettings
 	client   *fclient.Client
 	wg       sync.WaitGroup
+	// sendMu serializes sends: the client does not guard concurrent writes
+	// on the connection when RequireAck is false, so parallel queue consumers
+	// would interleave their frames on the wire.
+	sendMu sync.Mutex
 }
 
 func newExporter(config *Config, settings component.TelemetrySettings) *fluentforwardExporter {
@@ -138,6 +142,9 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 type sendFunc func(string, fproto.EntryList) error
 
 func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.EntryExt) error {
+	f.sendMu.Lock()
+	defer f.sendMu.Unlock()
+
 	err := sendMethod(f.config.Tag, entries)
 	// sometimes the connection is lost, we try to reconnect and send the data again
 	if err != nil {
