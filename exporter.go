@@ -110,7 +110,7 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 				log := logs.At(k)
 				entry := fproto.EntryExt{
 					Timestamp: fproto.EventTime{
-						Time: log.Timestamp().AsTime(),
+						Time: logTimestamp(log).AsTime(),
 					},
 					Record: f.convertLogToMap(log),
 				}
@@ -136,7 +136,7 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 			case "message":
 				m[k] = lr.Body().AsString()
 			case "timestamp":
-				m[k] = lr.Timestamp().AsTime().UTC().Format(time.RFC3339Nano)
+				m[k] = logTimestamp(lr).AsTime().UTC().Format(time.RFC3339Nano)
 			}
 		}
 	}
@@ -146,6 +146,16 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 		return true
 	})
 	return m
+}
+
+// logTimestamp returns the time the event occurred, falling back to the time
+// it was observed: many receivers only set ObservedTimestamp, and an unset
+// Timestamp would otherwise be sent as the Unix epoch.
+func logTimestamp(lr plog.LogRecord) pcommon.Timestamp {
+	if ts := lr.Timestamp(); ts != 0 {
+		return ts
+	}
+	return lr.ObservedTimestamp()
 }
 
 type sendFunc func(string, fproto.EntryList) error
