@@ -6,6 +6,7 @@ package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter
 import (
 	"context"
 	"fmt"
+	"net"
 	"sync"
 	"time"
 
@@ -38,7 +39,8 @@ func newExporter(config *Config, settings component.TelemetrySettings) *fluentfo
 
 func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) error {
 	connOptions := fclient.ConnectionOptions{
-		RequireAck: f.config.RequireAck,
+		RequireAck:        f.config.RequireAck,
+		ConnectionTimeout: f.config.ConnectionTimeout,
 	}
 
 	tlsConfig, err := f.config.ClientConfig.LoadTLSConfig(ctx)
@@ -51,7 +53,10 @@ func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) 
 		TLSConfig: tlsConfig,
 	}
 
-	connOptions.Factory = connFactory
+	connOptions.Factory = &deadlineConnFactory{
+		ConnectionFactory: connFactory,
+		timeout:           f.config.ConnectionTimeout,
+	}
 
 	if f.config.SharedKey != "" {
 		connOptions.AuthInfo = fclient.AuthInfo{
@@ -171,4 +176,41 @@ func (f *fluentforwardExporter) sendCompressed(entries []fproto.EntryExt) error 
 
 func (f *fluentforwardExporter) sendForward(entries []fproto.EntryExt) error {
 	return f.send(f.client.SendForward, entries)
+}
+
+// deadlineConnFactory wraps a ConnectionFactory so that reads and writes on
+// its connections time out instead of blocking forever on an unresponsive
+// peer. The client sets no deadlines of its own on handshakes or writes.
+type deadlineConnFactory struct {
+	fclient.ConnectionFactory
+	timeout time.Duration
+}
+
+func (f *deadlineConnFactory) New() (net.Conn, error) {
+	conn, err := f.ConnectionFactory.New()
+	if err != nil || f.timeout <= 0 {
+		return conn, err
+	}
+	return &deadlineConn{Conn: conn, timeout: f.timeout}, nil
+}
+
+// deadlineConn refreshes the deadline before every Read and Write, so a peer
+// that keeps making progress is never cut off, while a stalled one is.
+type deadlineConn struct {
+	net.Conn
+	timeout time.Duration
+}
+
+func (c *deadlineConn) Read(b []byte) (int, error) {
+	if err := c.Conn.SetReadDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Read(b)
+}
+
+func (c *deadlineConn) Write(b []byte) (int, error) {
+	if err := c.Conn.SetWriteDeadline(time.Now().Add(c.timeout)); err != nil {
+		return 0, err
+	}
+	return c.Conn.Write(b)
 }
