@@ -142,7 +142,7 @@ func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]in
 	}
 
 	lr.Attributes().Range(func(k string, v pcommon.Value) bool {
-		m[k] = v.AsString()
+		m[k] = v.AsRaw()
 		return true
 	})
 	return m
