@@ -18,6 +18,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/tinylib/msgp/msgp"
 	"go.opentelemetry.io/collector/component"
+	"go.opentelemetry.io/collector/pdata/pcommon"
 	"go.opentelemetry.io/collector/pdata/plog"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zaptest/observer"
@@ -262,5 +263,65 @@ func TestPushLogDataTimesOutWhenServerStopsReading(t *testing.T) {
 		assert.True(t, netErr.Timeout())
 	case <-time.After(20 * time.Second):
 		t.Fatal("pushLogData blocked on a stalled server")
+	}
+}
+
+func TestPushLogDataFallsBackToObservedTimestamp(t *testing.T) {
+	eventTime := time.Date(2026, 10, 25, 1, 2, 3, 4000, time.UTC)
+	observedTime := time.Date(2026, 10, 25, 5, 6, 7, 8000, time.UTC)
+
+	tests := []struct {
+		name      string
+		timestamp time.Time
+		observed  time.Time
+		expected  time.Time
+	}{
+		{name: "timestamp set", timestamp: eventTime, observed: observedTime, expected: eventTime},
+		{name: "only observed timestamp set", observed: observedTime, expected: observedTime},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			ln, err := net.Listen("tcp", "127.0.0.1:0")
+			require.NoError(t, err)
+			defer func() { _ = ln.Close() }()
+
+			received := make(chan fproto.ForwardMessage, 1)
+			go func() {
+				conn, err := ln.Accept()
+				if err != nil {
+					return
+				}
+				defer func() { _ = conn.Close() }()
+				var m fproto.ForwardMessage
+				if err := m.DecodeMsg(msgp.NewReader(conn)); err == nil {
+					received <- m
+				}
+			}()
+
+			config := createDefaultConfig().(*Config)
+			config.Endpoint.TCPAddr = ln.Addr().String()
+			exporter := newExporter(config, component.TelemetrySettings{Logger: zap.NewNop()})
+			require.NoError(t, exporter.start(context.Background(), nil))
+			defer func() { assert.NoError(t, exporter.stop(context.Background())) }()
+
+			ld := plog.NewLogs()
+			lr := ld.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty()
+			if !tt.timestamp.IsZero() {
+				lr.SetTimestamp(pcommon.NewTimestampFromTime(tt.timestamp))
+			}
+			lr.SetObservedTimestamp(pcommon.NewTimestampFromTime(tt.observed))
+			require.NoError(t, exporter.pushLogData(context.Background(), ld))
+
+			select {
+			case m := <-received:
+				require.Len(t, m.Entries, 1)
+				entry := m.Entries[0]
+				assert.True(t, tt.expected.Equal(entry.Timestamp.Time), "event time: got %s, want %s", entry.Timestamp.Time, tt.expected)
+				assert.Equal(t, tt.expected.Format(time.RFC3339Nano), entry.Record.(map[string]any)["timestamp"])
+			case <-time.After(5 * time.Second):
+				t.Fatal("server did not receive the message")
+			}
+		})
 	}
 }
