@@ -381,3 +381,52 @@ func TestPushLogDataKeepsAttributeTypes(t *testing.T) {
 		t.Fatal("server did not receive the message")
 	}
 }
+
+func TestPushLogDataSkipsEmptyLogs(t *testing.T) {
+	ld := plog.NewLogs()
+	// A resource and scope without log records must not be sent either.
+	ld.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty()
+
+	// The exporter is never started: an attempt to send would use a nil client.
+	exporter := newExporter(createDefaultConfig().(*Config), component.TelemetrySettings{Logger: zap.NewNop()})
+	require.NoError(t, exporter.pushLogData(context.Background(), plog.NewLogs()))
+	require.NoError(t, exporter.pushLogData(context.Background(), ld))
+}
+
+func TestPushLogDataReturnsContextError(t *testing.T) {
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	require.NoError(t, err)
+	defer func() { _ = ln.Close() }()
+
+	received := make(chan struct{}, 1)
+	go func() {
+		conn, err := ln.Accept()
+		if err != nil {
+			return
+		}
+		defer func() { _ = conn.Close() }()
+		var m fproto.ForwardMessage
+		if err := m.DecodeMsg(msgp.NewReader(conn)); err == nil {
+			received <- struct{}{}
+		}
+	}()
+
+	config := createDefaultConfig().(*Config)
+	config.Endpoint.TCPAddr = ln.Addr().String()
+	exporter := newExporter(config, component.TelemetrySettings{Logger: zap.NewNop()})
+	require.NoError(t, exporter.start(context.Background(), nil))
+	defer func() { assert.NoError(t, exporter.stop(context.Background())) }()
+
+	ld := plog.NewLogs()
+	ld.ResourceLogs().AppendEmpty().ScopeLogs().AppendEmpty().LogRecords().AppendEmpty().Body().SetStr("message")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	require.ErrorIs(t, exporter.pushLogData(ctx, ld), context.Canceled)
+
+	select {
+	case <-received:
+		t.Fatal("server received a message for a cancelled request")
+	case <-time.After(200 * time.Millisecond):
+	}
+}
