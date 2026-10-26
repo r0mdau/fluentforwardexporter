@@ -4,8 +4,10 @@
 package fluentforwardexporter // import "github.com/r0mdau/fluentforwardexporter"
 
 import (
+	"errors"
 	"fmt"
 	"net"
+	"slices"
 	"time"
 
 	"go.opentelemetry.io/collector/component"
@@ -60,10 +62,32 @@ type Endpoint struct {
 
 var _ component.Config = (*Config)(nil)
 
+// supportedDefaultLabels lists the keys recognized in DefaultLabelsEnabled.
+var supportedDefaultLabels = []string{"timestamp", "level", "message"}
+
 // Validate checks if the configuration is valid
 func (config *Config) Validate() error {
 	if err := config.QueueBatchConfig.Validate(); err != nil {
 		return fmt.Errorf("queue settings has invalid configuration: %w", err)
+	}
+
+	if config.TCPClientSettings.Endpoint.TCPAddr == "" {
+		return errors.New("endpoint.tcp_addr must not be empty")
+	}
+
+	if config.Tag == "" {
+		return errors.New("tag must not be empty")
+	}
+
+	var unknownLabels []string
+	for label := range config.DefaultLabelsEnabled {
+		if !slices.Contains(supportedDefaultLabels, label) {
+			unknownLabels = append(unknownLabels, label)
+		}
+	}
+	if len(unknownLabels) > 0 {
+		slices.Sort(unknownLabels)
+		return fmt.Errorf("default_labels_enabled has unknown labels %q, supported labels are %q", unknownLabels, supportedDefaultLabels)
 	}
 
 	if config.TCPClientSettings.Endpoint.ValidateTCPResolution {

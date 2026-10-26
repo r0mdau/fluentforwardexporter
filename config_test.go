@@ -96,55 +96,76 @@ func TestLoadConfigNewExporter(t *testing.T) {
 
 func TestConfigValidate(t *testing.T) {
 	testCases := []struct {
-		desc string
-		cfg  *Config
-		err  error
+		desc   string
+		modify func(cfg *Config)
+		err    error
 	}{
 		{
 			desc: "QueueSettings are invalid",
-			cfg: &Config{
-				QueueBatchConfig: configoptional.Some(exporterhelper.QueueBatchConfig{
+			modify: func(cfg *Config) {
+				cfg.QueueBatchConfig = configoptional.Some(exporterhelper.QueueBatchConfig{
 					QueueSize: -1,
-				}),
+				})
 			},
 			err: fmt.Errorf("queue settings has invalid configuration"),
 		},
 		{
+			desc: "Endpoint is empty",
+			modify: func(cfg *Config) {
+				cfg.Endpoint.TCPAddr = ""
+			},
+			err: fmt.Errorf("endpoint.tcp_addr must not be empty"),
+		},
+		{
 			desc: "Endpoint is invalid",
-			cfg: &Config{
-				TCPClientSettings: TCPClientSettings{
-					Endpoint: Endpoint{
-						TCPAddr:               "http://localhost:24224",
-						ValidateTCPResolution: true,
-					},
-					ConnectionTimeout: time.Second * 30,
-				},
+			modify: func(cfg *Config) {
+				cfg.Endpoint.TCPAddr = "http://localhost:24224"
+				cfg.Endpoint.ValidateTCPResolution = true
 			},
 			err: fmt.Errorf("exporter has an invalid TCP endpoint: address http://localhost:24224: too many colons in address"),
 		},
 		{
 			desc: "Endpoint is invalid with ValidateTCPResolution false throw no error",
-			cfg: &Config{
-				TCPClientSettings: TCPClientSettings{
-					Endpoint: Endpoint{
-						TCPAddr:               "http://localhost:24224",
-						ValidateTCPResolution: false,
-					},
-					ConnectionTimeout: time.Second * 30,
-				},
+			modify: func(cfg *Config) {
+				cfg.Endpoint.TCPAddr = "http://localhost:24224"
+				cfg.Endpoint.ValidateTCPResolution = false
+			},
+			err: nil,
+		},
+		{
+			desc: "Tag is empty",
+			modify: func(cfg *Config) {
+				cfg.Tag = ""
+			},
+			err: fmt.Errorf("tag must not be empty"),
+		},
+		{
+			desc: "Default labels contain unknown labels",
+			modify: func(cfg *Config) {
+				cfg.DefaultLabelsEnabled = map[string]bool{
+					"message":  true,
+					"severity": true,
+					"msg":      false,
+				}
+			},
+			err: fmt.Errorf(`default_labels_enabled has unknown labels ["msg" "severity"], supported labels are ["timestamp" "level" "message"]`),
+		},
+		{
+			desc: "Default labels can be disabled",
+			modify: func(cfg *Config) {
+				cfg.DefaultLabelsEnabled = map[string]bool{
+					"timestamp": true,
+					"level":     false,
+					"message":   false,
+				}
 			},
 			err: nil,
 		},
 		{
 			desc: "Config is valid",
-			cfg: &Config{
-				TCPClientSettings: TCPClientSettings{
-					Endpoint: Endpoint{
-						TCPAddr:               validEndpoint,
-						ValidateTCPResolution: true,
-					},
-					ConnectionTimeout: time.Second * 30,
-				},
+			modify: func(cfg *Config) {
+				cfg.Endpoint.TCPAddr = validEndpoint
+				cfg.Endpoint.ValidateTCPResolution = true
 			},
 			err: nil,
 		},
@@ -152,7 +173,9 @@ func TestConfigValidate(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.desc, func(t *testing.T) {
-			err := tc.cfg.Validate()
+			cfg := createDefaultConfig().(*Config)
+			tc.modify(cfg)
+			err := cfg.Validate()
 			if tc.err != nil {
 				require.Error(t, err)
 				assert.Contains(t, err.Error(), tc.err.Error())

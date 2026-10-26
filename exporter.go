@@ -21,7 +21,6 @@ type fluentforwardExporter struct {
 	config   *Config
 	settings component.TelemetrySettings
 	client   *fclient.Client
-	wg       sync.WaitGroup
 	// sendMu serializes sends: the client does not guard concurrent writes
 	// on the connection when RequireAck is false, so parallel queue consumers
 	// would interleave their frames on the wire.
@@ -72,7 +71,6 @@ func (f *fluentforwardExporter) start(ctx context.Context, host component.Host) 
 }
 
 func (f *fluentforwardExporter) stop(context.Context) (err error) {
-	f.wg.Wait()
 	// client is nil when start was never called or failed before creating it.
 	if f.client == nil {
 		return nil
@@ -98,8 +96,13 @@ func (f *fluentforwardExporter) connectForward() {
 }
 
 func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) error {
+	// Nothing to forward: don't send an empty Forward message.
+	if ld.LogRecordCount() == 0 {
+		return nil
+	}
+
 	// move for loops into a translator
-	entries := []fproto.EntryExt{}
+	entries := make([]fproto.EntryExt, 0, ld.LogRecordCount())
 	rls := ld.ResourceLogs()
 	for i := 0; i < rls.Len(); i++ {
 		ills := rls.At(i).ScopeLogs()
@@ -120,9 +123,9 @@ func (f *fluentforwardExporter) pushLogData(ctx context.Context, ld plog.Logs) e
 	}
 
 	if f.config.CompressGzip {
-		return f.sendCompressed(entries)
+		return f.sendCompressed(ctx, entries)
 	}
-	return f.sendForward(entries)
+	return f.sendForward(ctx, entries)
 }
 
 func (f *fluentforwardExporter) convertLogToMap(lr plog.LogRecord) map[string]interface{} {
@@ -160,9 +163,15 @@ func logTimestamp(lr plog.LogRecord) pcommon.Timestamp {
 
 type sendFunc func(string, fproto.EntryList) error
 
-func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.EntryExt) error {
+func (f *fluentforwardExporter) send(ctx context.Context, sendMethod sendFunc, entries []fproto.EntryExt) error {
 	f.sendMu.Lock()
 	defer f.sendMu.Unlock()
+
+	// The request may have been cancelled (e.g. on shutdown) while waiting
+	// for another send to finish.
+	if err := ctx.Err(); err != nil {
+		return err
+	}
 
 	err := sendMethod(f.config.Tag, entries)
 	// sometimes the connection is lost, we try to reconnect and send the data again
@@ -180,12 +189,12 @@ func (f *fluentforwardExporter) send(sendMethod sendFunc, entries []fproto.Entry
 	return nil
 }
 
-func (f *fluentforwardExporter) sendCompressed(entries []fproto.EntryExt) error {
-	return f.send(f.client.SendCompressed, entries)
+func (f *fluentforwardExporter) sendCompressed(ctx context.Context, entries []fproto.EntryExt) error {
+	return f.send(ctx, f.client.SendCompressed, entries)
 }
 
-func (f *fluentforwardExporter) sendForward(entries []fproto.EntryExt) error {
-	return f.send(f.client.SendForward, entries)
+func (f *fluentforwardExporter) sendForward(ctx context.Context, entries []fproto.EntryExt) error {
+	return f.send(ctx, f.client.SendForward, entries)
 }
 
 // deadlineConnFactory wraps a ConnectionFactory so that reads and writes on
